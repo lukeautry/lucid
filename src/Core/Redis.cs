@@ -16,7 +16,7 @@ namespace Lucid.Core
 	public class RedisProvider : IRedisProvider
 	{
 		private static ConnectionMultiplexer _redis;
-		private static ConnectionMultiplexer Redis => _redis ?? (_redis = ConnectionMultiplexer.Connect("localhost"));
+		private static ConnectionMultiplexer Redis => _redis ?? (_redis = ConnectionMultiplexer.Connect("127.0.0.1"));
 
 		public IDatabase GetDatabase()
 		{
