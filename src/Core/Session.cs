@@ -9,9 +9,16 @@ namespace Lucid.Core
 		public string Id { get; set; }
 	}
 
-    public static class Session
+    public class Session
     {
-        public static async Task<SessionData> Initialize()
+	    private readonly IRedisProvider _redisProvider;
+
+	    public Session(IRedisProvider redisProvider = null)
+	    {
+		    _redisProvider = redisProvider ?? new RedisProvider();
+	    }
+
+        public async Task<SessionData> Initialize()
         {
 	        var session = new SessionData
 	        {
@@ -21,10 +28,18 @@ namespace Lucid.Core
 	        return await Save(session);
         }
 
-	    public static async Task<SessionData> Save(SessionData data)
+	    public async Task<SessionData> Save(SessionData data)
 	    {
-			var redis = RedisProvider.Get();
-		    await redis.StringSetAsync(GetSessionKey(data.Id), JsonConvert.SerializeObject(data));
+			var redis = _redisProvider.GetDatabase();
+
+		    try
+		    {
+				await redis.StringSetAsync(GetSessionKey(data.Id), JsonConvert.SerializeObject(data));
+			}
+			catch(Exception ex)
+			{
+				Console.WriteLine(ex.ToString());
+			}
 
 			return data;
 	    }

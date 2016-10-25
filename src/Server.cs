@@ -7,6 +7,8 @@ namespace Lucid
 	{
 		public static void Main(string[] args)
 		{
+			new EventQueue().Start();
+
 			Task.Run(async () =>
 			{
 				var listener = new Listener(5000);

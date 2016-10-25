@@ -3,22 +3,32 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using Lucid.Events;
 
 namespace Lucid.Core
 {
-	public static class Client
+	public sealed class Client
 	{
-		public static async Task Start(TcpClient tcpClient)
+		private readonly TcpClient _tcpClient;
+
+		public Client(TcpClient tcpClient)
 		{
-			var socketService = new SocketService(tcpClient);
-			var session = await Session.Initialize();
-			var commandQueue = CommandQueue.Initialize(session.Id);
+			_tcpClient = tcpClient;
+		}
+
+		public async Task Start()
+		{
+			var socketService = new SocketService(_tcpClient);
+			var session = await new Session().Initialize();
+			var commandQueue = await new CommandQueue(session.Id).Start();
+			await new ConnectEvent().Enqueue(new ConnectEventData { SessionId = session.Id });
+			await new UserMessageQueue(session.Id).Start(socketService);
 
 			var pendingBuffer = ImmutableArray.Create<byte>();
 			while (true)
 			{
 				var buffer = new byte[1024];
-				await tcpClient.GetStream().ReadAsync(buffer, 0, buffer.Length);
+				await _tcpClient.GetStream().ReadAsync(buffer, 0, buffer.Length);
 
 				var trimmedBuffer = buffer.Where(b => !b.Equals(0)).ToImmutableArray();
 				pendingBuffer = pendingBuffer.Concat(trimmedBuffer).ToImmutableArray();
@@ -31,22 +41,14 @@ namespace Lucid.Core
 					.Select(Convert.ToChar)
 					.ToArray();
 
-				var commandValue = new string(commandChars);
-				if (!string.IsNullOrEmpty(commandValue))
+				var command = new string(commandChars);
+				if (!string.IsNullOrEmpty(command))
 				{
-
+					await commandQueue.Enqueue(command);
 				}
 
 				pendingBuffer = ImmutableArray.Create<byte>();
 			}
-		}
-	}
-
-	public class CommandQueue
-	{
-		public static async CommandQueue Initialize(string sessionId)
-		{
-
 		}
 	}
 }

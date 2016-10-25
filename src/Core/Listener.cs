@@ -1,8 +1,6 @@
-using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using System.Threading;
 
 namespace Lucid.Core
 {
@@ -23,7 +21,7 @@ namespace Lucid.Core
                 var tcpClient = await _listener.AcceptTcpClientAsync();
                 if (tcpClient == null) { continue; }
 
-                Client.Start(tcpClient);
+                new Client(tcpClient).Start();
             }
         }
     }
