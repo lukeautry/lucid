@@ -1,13 +1,13 @@
 using System;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using StackExchange.Redis;
 
 namespace Lucid.Core
 {
     public class SessionData
     {
         public string Id { get; set; }
+	    public bool NameInputPending { get; set; }
     }
 
     public class Session
@@ -29,20 +29,16 @@ namespace Lucid.Core
             return await Save(session);
         }
 
+	    public async Task<SessionData> Get(string sessionId)
+	    {
+		    var session = await _redisProvider.GetDatabase().StringGetAsync(GetSessionKey(sessionId));
+		    return JsonConvert.DeserializeObject<SessionData>(session);
+	    }
+
         public async Task<SessionData> Save(SessionData data)
         {
-            var redis = _redisProvider.GetDatabase();
-
-            try
-            {
-                await redis.StringSetAsync(GetSessionKey(data.Id), JsonConvert.SerializeObject(data));
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
-
-            return data;
+            await _redisProvider.GetDatabase().StringSetAsync(GetSessionKey(data.Id), JsonConvert.SerializeObject(data));
+			return data;
         }
 
         private static string GetSessionKey(string sessionId)

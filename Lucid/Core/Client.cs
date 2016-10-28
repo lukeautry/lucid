@@ -22,7 +22,7 @@ namespace Lucid.Core
 			var session = await new Session().Initialize();
 			var commandQueue = await new CommandQueue(session.Id).Start();
 			await new ConnectEvent().Enqueue(new ConnectEventData { SessionId = session.Id });
-			await new UserMessageQueue(session.Id).Start(socketService);
+			await new UserMessageQueue().Start(session.Id, socketService);
 
 			var pendingBuffer = ImmutableArray.Create<byte>();
 			while (true)

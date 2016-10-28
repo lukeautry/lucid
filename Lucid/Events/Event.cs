@@ -11,7 +11,12 @@ namespace Lucid.Events
 
 	public abstract class Event<T>
 	{
-		private readonly RedisProvider _redisProvider = new RedisProvider();
+		protected readonly IRedisProvider RedisProvider;
+
+		protected Event(IRedisProvider redisProvider)
+		{
+			RedisProvider = redisProvider ?? new RedisProvider();
+		}
 
 		public abstract string Key { get; set; }
 		public abstract Task Execute(T data);
@@ -24,7 +29,7 @@ namespace Lucid.Events
 				Value = value
 			};
 
-			await _redisProvider.Publish(EventQueue.QueueKey, serializedEvent);
+			await RedisProvider.Publish(EventQueue.QueueKey, serializedEvent);
 		}
 	}
 }

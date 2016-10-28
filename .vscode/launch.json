@@ -6,7 +6,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceRoot}\\src\\bin\\Debug\\netcoreapp1.0\\src.dll",
+            "program": "${workspaceRoot}\\Lucid\\bin\\Debug\\netcoreapp1.0\\Lucid.dll",
             "args": [],
             "cwd": "${workspaceRoot}",
             "externalConsole": false,

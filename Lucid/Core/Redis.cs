@@ -10,7 +10,7 @@ namespace Lucid.Core
 		IDatabase GetDatabase();
 		Task SubscribeString(string key, Action<string> onPublish);
 		Task Subscribe<T>(string key, Action<T> onPublish);
-		Task Publish<T>(string key, T command);
+		Task Publish<T>(string key, T data);
 	}
 
 	public class RedisProvider : IRedisProvider
@@ -42,11 +42,11 @@ namespace Lucid.Core
 			});
 		}
 
-		public async Task Publish<T>(string key, T command)
+		public async Task Publish<T>(string key, T data)
 		{
 			var serializedData = typeof(T) == typeof(string)
-				? command as string
-				: JsonConvert.SerializeObject(command);
+				? data as string
+				: JsonConvert.SerializeObject(data);
 
 			var subscriber = Redis.GetSubscriber();
 			await subscriber.PublishAsync(key, serializedData);
