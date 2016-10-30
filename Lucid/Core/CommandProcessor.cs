@@ -35,6 +35,12 @@ namespace Lucid.Core
 				return true;
 		    }
 
+		    if (session.CreationData.ConfirmPasswordInputPending)
+		    {
+			    await new NewUserConfirmPasswordInputEvent().Enqueue(new NewUserConfirmPasswordInputEventData(session.Id, command));
+				return true;
+		    }
+
 			return false;
 	    }
 

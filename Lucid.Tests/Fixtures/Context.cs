@@ -17,11 +17,12 @@ namespace Lucid.Tests.Fixtures
 			UpdateSession();
 	    }
 
-	    public void SetSession(Action<SessionData> updateFunc)
+	    public SessionData SetSession(Action<SessionData> updateFunc)
 	    {
 		    updateFunc(_session);
 		    UpdateSession();
-		    Console.WriteLine(_session.CreationData.PasswordInputPending);
+
+			return _session;
 	    }
 
 	    public async Task<SessionData> GetSession()
@@ -34,5 +35,10 @@ namespace Lucid.Tests.Fixtures
 	    {
 			Task.Run(() => new SessionService(RedisProvider).Save(_session)).Wait();
 		}
+
+	    public string GetNextMessage()
+	    {
+		    return RedisProvider.DequeueUserMessage(_session.Id).Content;
+	    }
     }
 }

@@ -39,11 +39,7 @@ namespace Lucid.Tests.Events
 		    const string userName = "TestName";
 			
 			var userRepository = new Mock<IUserRepository>();
-		    userRepository.Setup(u => u.GetByName(userName)).ReturnsAsync(new User
-		    {
-			    Id = 1,
-				Name = userName
-		    });
+		    userRepository.Setup(u => u.GetByName(userName)).ReturnsAsync(new User { Name = userName, Id = 1 });
 
 			var evt = new NameInputEvent(userRepository.Object, redisProvider);
 			await evt.Execute(new NameInputEventData(userName, session.Id));

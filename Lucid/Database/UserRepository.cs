@@ -8,6 +8,7 @@ namespace Lucid.Database
 	{
 		Task<User> Get(int id);
 		Task<User> GetByName(string name);
+		Task<User> Create(User user);
 	}
 
 	public class UserRepository : Repository<User>, IUserRepository
@@ -26,9 +27,21 @@ namespace Lucid.Database
 			return user;
 		}
 
+		public async Task<User> Create(User user)
+		{
+			var createdUser = await Connection.QuerySingleAsync<User>(
+						$"insert into {TableName}(name, hashed_password, created_at, updated_at) values (@Name, @HashedPassword, @CreatedAt, @UpdatedAt) returning *",
+						new { user.Name, user.HashedPassword, user.CreatedAt, user.UpdatedAt });
+
+			await CacheSet(GetNameCacheKey(createdUser.Name), createdUser);
+			await CacheSetById(createdUser);
+
+			return createdUser;
+		}
+
 		private static string GetNameCacheKey(string name)
 		{
-			return $"users:name:${name}";
+			return $"users:name:{name}";
 		}
 	}
 }

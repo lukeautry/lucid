@@ -1,7 +1,9 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Lucid.Core;
 using Lucid.Database;
+using Lucid.Models;
 
 namespace Lucid.Events
 {
