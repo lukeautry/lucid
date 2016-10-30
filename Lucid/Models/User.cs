@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Lucid.Models
+﻿namespace Lucid.Models
 {
     public class User : Model
     {

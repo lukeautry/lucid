@@ -3,6 +3,21 @@
   "version": 2,
   "targets": {
     ".NETCoreApp,Version=v1.0": {
+      "BCrypt.Net-Core/1.1.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.CSharp": "4.0.1",
+          "System.Diagnostics.Debug": "4.0.11",
+          "System.Runtime.Extensions": "4.1.0",
+          "System.Security.Cryptography.Algorithms": "4.2.0"
+        },
+        "compile": {
+          "lib/netstandard1.3/BCrypt.Net-Core.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard1.3/BCrypt.Net-Core.dll": {}
+        }
+      },
       "Castle.Core/4.0.0-beta001": {
         "type": "package",
         "dependencies": {
@@ -304,7 +319,7 @@
           "lib/netstandard1.5/Microsoft.DotNet.ProjectModel.dll": {}
         }
       },
-      "Microsoft.Extensions.DependencyModel/1.0.0-rc2-002702": {
+      "Microsoft.Extensions.DependencyModel/1.0.0-rc2-final": {
         "type": "package",
         "dependencies": {
           "Microsoft.DotNet.InternalAbstractions": "1.0.0-rc2-002702",
@@ -3051,7 +3066,9 @@
         "type": "project",
         "framework": ".NETCoreApp,Version=v1.0",
         "dependencies": {
+          "BCrypt.Net-Core": "1.1.0",
           "Dapper": "1.50.2",
+          "Microsoft.Extensions.DependencyModel": "1.0.0-rc2-final",
           "Microsoft.NETCore.App": "1.0.1",
           "Newtonsoft.Json": "8.0.3",
           "Npgsql": "3.1.8",
@@ -3069,6 +3086,22 @@
     }
   },
   "libraries": {
+    "BCrypt.Net-Core/1.1.0": {
+      "sha512": "6VJzRAYl+yUNvXxHxaSiUK8m2n9xSIGZIX824dC8LuN3YgACRY66blA/BCFg7NXALGv4U9++DRHzFV8TUH9VYA==",
+      "type": "package",
+      "path": "BCrypt.Net-Core/1.1.0",
+      "files": [
+        "BCrypt.Net-Core.1.1.0.nupkg.sha512",
+        "BCrypt.Net-Core.nuspec",
+        "lib/net20/BCrypt.Net-Core.dll",
+        "lib/net35/BCrypt.Net-Core.dll",
+        "lib/net40/BCrypt.Net-Core.dll",
+        "lib/net45/BCrypt.Net-Core.dll",
+        "lib/net451/BCrypt.Net-Core.dll",
+        "lib/net452/BCrypt.Net-Core.dll",
+        "lib/netstandard1.3/BCrypt.Net-Core.dll"
+      ]
+    },
     "Castle.Core/4.0.0-beta001": {
       "sha512": "AhlzkJEGZddWgUj2Vub2h2p171eETkQzymd4ZSgcxQBZaxgsFSJjQ7I6fLs86nS39+xxsZR3eXaH86DWVrfurA==",
       "type": "package",
@@ -3309,11 +3342,12 @@
         "lib/netstandard1.5/Microsoft.DotNet.ProjectModel.dll"
       ]
     },
-    "Microsoft.Extensions.DependencyModel/1.0.0-rc2-002702": {
-      "sha512": "xLEhTaEJw+3o49TNfPJ0I4ZBPe56kIIgHYmrQo6AibTfdaIV36TyvjznIGwRc53x87xKavq88PlV4tpL+jUiJQ==",
+    "Microsoft.Extensions.DependencyModel/1.0.0-rc2-final": {
+      "sha512": "IFfLyVWxqGOA+ql+h6gvPjWbDMXClLORxgoeJab7WxpPHTcHut/5vFLu8+29iQklymlKfYefRo8tudtwjxjCRw==",
       "type": "package",
+      "path": "Microsoft.Extensions.DependencyModel/1.0.0-rc2-final",
       "files": [
-        "Microsoft.Extensions.DependencyModel.1.0.0-rc2-002702.nupkg.sha512",
+        "Microsoft.Extensions.DependencyModel.1.0.0-rc2-final.nupkg.sha512",
         "Microsoft.Extensions.DependencyModel.nuspec",
         "lib/net451/Microsoft.Extensions.DependencyModel.dll",
         "lib/netstandard1.5/Microsoft.Extensions.DependencyModel.dll"

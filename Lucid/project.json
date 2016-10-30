@@ -5,7 +5,7 @@
 		"emitEntryPoint": true
 	},
 	"tools": {
-		"Microsoft.Dotnet.Watcher.Tools":  "1.0.0-preview2-final"
+		"Microsoft.Dotnet.Watcher.Tools": "1.0.0-preview2-final"
 	},
 	"dependencies": {
 		"Newtonsoft.Json": "8.0.3",
@@ -13,7 +13,9 @@
 		"System.Runtime.Serialization.Primitives": "4.1.1",
 		"Dapper": "1.50.2",
 		"Npgsql": "3.1.8",
-		"System.Linq": "4.1.0"
+		"System.Linq": "4.1.0",
+		"BCrypt.Net-Core": "1.1.0",
+		"Microsoft.Extensions.DependencyModel": "1.0.0-rc2-final"
 	},
 	"frameworks": {
 		"netcoreapp1.0": {

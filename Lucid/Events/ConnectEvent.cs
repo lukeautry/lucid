@@ -5,25 +5,28 @@ namespace Lucid.Events
 {
 	public class ConnectEventData
 	{
-		public string SessionId { get; set; }
+		public readonly string SessionId;
+
+		public ConnectEventData(string sessionId)
+		{
+			SessionId = sessionId;
+		}
 	}
 
 	public class ConnectEvent : Event<ConnectEventData>
 	{
-		public override string Key { get; set; } = "connect";
+		public const string WelcomeMessage = "Welcome to LucidMUD!";
+		public const string NameInputMessage = "Please enter your name:";
 
-		public ConnectEvent(IRedisProvider redisProvider = null) : base(redisProvider) { }
+		public ConnectEvent(IRedisProvider redisProvider = null) : base("connect", redisProvider) { }
 
 		public override async Task Execute(ConnectEventData data)
 		{
 			var userMessageQueue = new UserMessageQueue(RedisProvider);
 
-			await userMessageQueue.Enqueue(data.SessionId, b => b.Add("Welcome to LucidMUD!").Break());
-
-			var session = await new Session().Get(data.SessionId);
-			session.NameInputPending = true;
-
-			await userMessageQueue.Enqueue(data.SessionId, b => b.Add("Please enter your name:"));
+			await userMessageQueue.Enqueue(data.SessionId, b => b.Add(WelcomeMessage).Break());
+			await new SessionService(RedisProvider).Update(data.SessionId, s => s.NameInputPending = true);
+			await userMessageQueue.Enqueue(data.SessionId, b => b.Add(NameInputMessage));
 		}
 	}
 }

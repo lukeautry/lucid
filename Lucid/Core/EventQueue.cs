@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using Lucid.Events;
+using Microsoft.Extensions.DependencyModel;
 using Newtonsoft.Json;
+using System.Linq;
+using System.Reflection;
 
 namespace Lucid.Core
 {
@@ -27,23 +30,57 @@ namespace Lucid.Core
 				var dynamicEventData = JsonConvert.DeserializeObject<SerializedEvent<dynamic>>(data);
 				var key = dynamicEventData.Key;
 
-				var eventHandler = _eventMap[key];
+				Action<string> eventHandler;
+				var hasEvent = _eventMap.TryGetValue(key, out eventHandler);
+				if (!hasEvent)
+				{
+					Console.WriteLine($"No event with key '{key}' found.");
+					return;
+				}
+
 				eventHandler(data);
 			});
 		}
 
 		private void RegisterEvents()
 		{
-			Register(new ConnectEvent());
+			var library = DependencyContext.Default.RuntimeLibraries.First(l => l.Name == "Lucid");
+			Assembly.Load(new AssemblyName(library.Name)).GetTypes()
+				.Where(t =>
+				{
+					var baseType = t.GetTypeInfo().BaseType;
+					if (baseType == null) { return false; }
+
+					var baseTypeInfo = baseType.GetTypeInfo();
+					return baseTypeInfo.IsGenericType && baseTypeInfo.GetGenericTypeDefinition() == typeof(Event<>);
+				})
+				.ToList()
+				.ForEach(RegisterEventType);
 		}
 
-		private void Register<T>(Event<T> ev)
+		private void RegisterEventType(Type eventType)
 		{
-			_eventMap.Add(ev.Key, data =>
+			var constructor = eventType.GetConstructors().FirstOrDefault();
+
+			dynamic instance;
+			if (constructor != null)
 			{
-				var deserializedData = JsonConvert.DeserializeObject<SerializedEvent<T>>(data);
-				ev.Execute(deserializedData.Value);
-			});
+				var parameters = constructor.GetParameters();
+				var objects = parameters.Select(parameter => Type.Missing).ToArray();
+
+				instance = constructor.Invoke(objects);
+			}
+			else
+			{
+				instance = Activator.CreateInstance(eventType);
+			}
+
+			if (instance == null)
+			{
+				throw new Exception($"Failed to create instance of type {eventType.Name}");
+			}
+
+			instance.Register(_eventMap);
 		}
 	}
 }

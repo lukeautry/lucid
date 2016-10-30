@@ -9,30 +9,31 @@ namespace Lucid.Events
 	{
 		private readonly IUserRepository _userRepository;
 		private readonly UserMessageQueue _userMessageQueue;
-		public override string Key { get; set; } = "name-input";
 		public const string MaxLengthText = "Name must be no more than 64 characters.";
 		public const string MinLengthText = "Name should be at least two characters.";
 		public const string NameRequiredText = "Name is required.";
 		public const string AlphaOnlyText = "Name must be letters only.";
+		public const string EnterPasswordText = "Please enter your password:";
 
-		public NameInputEvent(IUserRepository userRepository = null, IRedisProvider redisProvider = null) : base(redisProvider)
+		public NameInputEvent(IUserRepository userRepository = null, IRedisProvider redisProvider = null) : base("name-input", redisProvider)
 		{
 			_userRepository = userRepository ?? new UserRepository();
-			_userMessageQueue = new UserMessageQueue(redisProvider ?? new RedisProvider());
+			_userMessageQueue = new UserMessageQueue(RedisProvider);
 		}
 
 		public override async Task Execute(NameInputEventData data)
 		{
 			if (!await IsValidName(data)) { return; }
 
-			var user = _userRepository.GetByName(data.Name);
+			var sessionService = new SessionService(RedisProvider);
+			var user = await _userRepository.GetByName(data.Name);
 			if (user != null)
 			{
-				await ProcessExistingUser();
+				await ProcessExistingUser(data, sessionService, user.Id);
 				return;
 			}
-
-			//await ProcessNewUser(data);
+			
+			await ProcessNewUser(data, sessionService);
 		}
 
 		private async Task<bool> IsValidName(NameInputEventData data)
@@ -64,14 +65,31 @@ namespace Lucid.Events
 			return false;
 		}
 
-		private async Task ProcessNewUser()
+		private async Task ProcessExistingUser(NameInputEventData data, SessionService sessionService, int userId)
 		{
+			await sessionService.Update(data.SessionId, s =>
+			{
+				s.NameInputPending = false;
+				s.LoginData = new LoginData { UserId = userId, PasswordInputPending = true };
+			});
 
+			await _userMessageQueue.Enqueue(data.SessionId, b => b.Add($"Welcome back {data.Name}!").Break().Add(EnterPasswordText));
 		}
 
-		private async Task ProcessExistingUser()
+		private async Task ProcessNewUser(NameInputEventData data, SessionService sessionService)
 		{
+			await sessionService.Update(data.SessionId, s =>
+			{
+				s.NameInputPending = false;
+				s.CreationData = new CreationData
+				{
+					Name = data.Name,
+					PasswordInputPending = true,
+					ConfirmPasswordInputPending = true
+				};
+			});
 
+			await _userMessageQueue.Enqueue(data.SessionId, b => b.Add($"Welcome {data.Name}! Looks like you're new here.").Break().Add(EnterPasswordText));
 		}
 	}
 

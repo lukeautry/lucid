@@ -19,9 +19,9 @@ namespace Lucid.Core
 		public async Task Start()
 		{
 			var socketService = new SocketService(_tcpClient);
-			var session = await new Session().Initialize();
+			var session = await new SessionService().Initialize();
 			var commandQueue = await new CommandQueue(session.Id).Start();
-			await new ConnectEvent().Enqueue(new ConnectEventData { SessionId = session.Id });
+			await new ConnectEvent().Enqueue(new ConnectEventData(session.Id));
 			await new UserMessageQueue().Start(session.Id, socketService);
 
 			var pendingBuffer = ImmutableArray.Create<byte>();

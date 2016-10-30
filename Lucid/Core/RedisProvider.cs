@@ -7,7 +7,10 @@ namespace Lucid.Core
 {
 	public interface IRedisProvider
 	{
-		IDatabase GetDatabase();
+		Task<string> GetString(string key);
+		Task SetString(string key, string value);
+		Task<T> GetObject<T>(string key);
+		Task SetObject<T>(string key, T value);
 		Task SubscribeString(string key, Action<string> onPublish);
 		Task Subscribe<T>(string key, Action<T> onPublish);
 		Task Publish<T>(string key, T data);
@@ -18,9 +21,25 @@ namespace Lucid.Core
 		private static ConnectionMultiplexer _redis;
 		private static ConnectionMultiplexer Redis => _redis ?? (_redis = ConnectionMultiplexer.Connect("127.0.0.1"));
 
-		public IDatabase GetDatabase()
+		public async Task<string> GetString(string key)
 		{
-			return Redis.GetDatabase();
+			return await Redis.GetDatabase().StringGetAsync(key);
+		}
+
+		public async Task SetString(string key, string value)
+		{
+			await Redis.GetDatabase().StringSetAsync(key, value);
+		}
+
+		public async Task<T> GetObject<T>(string key)
+		{
+			var rawObject = await GetString(key);
+			return rawObject == null ? default(T) : JsonConvert.DeserializeObject<T>(await GetString(key));
+		}
+
+		public async Task SetObject<T>(string key, T value)
+		{
+			await SetString(key, JsonConvert.SerializeObject(value));
 		}
 
 		public async Task SubscribeString(string key, Action<string> onPublish)

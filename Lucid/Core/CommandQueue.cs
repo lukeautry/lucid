@@ -6,7 +6,6 @@ namespace Lucid.Core
 	{
 		private readonly string _key;
 		private readonly IRedisProvider _redisProvider;
-		private readonly CommandProcessor _commandProcessor;
 		private readonly string _sessionId;
 
 		public CommandQueue(string sessionId, IRedisProvider redisProvider = null)
@@ -14,7 +13,6 @@ namespace Lucid.Core
 			_sessionId = sessionId;
 			_key = $"commands:{_sessionId}";
 			_redisProvider = redisProvider ?? new RedisProvider();
-			_commandProcessor = new CommandProcessor();
 		}
 
 		public async Task Enqueue(string command)
@@ -26,7 +24,7 @@ namespace Lucid.Core
 		{
 			await _redisProvider.SubscribeString(_key, async data =>
 			{
-				await _commandProcessor.Process(_sessionId, data);
+				await CommandProcessor.Process(_sessionId, data);
 			});
 
 			return this;

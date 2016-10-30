@@ -16,7 +16,19 @@ namespace Lucid.Database
 
 		public async Task<User> GetByName(string name)
 		{
-			return await Connection.QueryFirstAsync<User>("select * from users where name = @Name", new { name });
+			var cacheKey = GetNameCacheKey(name);
+			var cached = await CacheGet(cacheKey);
+			if (cached != null) { return cached; }
+
+			var user = await Connection.QueryFirstOrDefaultAsync<User>($"select * from {TableName} where name = @Name", new { name });
+			if (user != null) { await CacheSet(cacheKey, user); }
+
+			return user;
+		}
+
+		private static string GetNameCacheKey(string name)
+		{
+			return $"users:name:${name}";
 		}
 	}
 }

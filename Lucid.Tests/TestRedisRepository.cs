@@ -11,11 +11,34 @@ namespace Lucid.Tests
 	public class TestRedisRepository : IRedisProvider
 	{
 		private readonly Dictionary<string, Queue<string>> _queueDictionary = new Dictionary<string, Queue<string>>();
+		private readonly Dictionary<string, string> _staticDictionary = new Dictionary<string, string>();
 
 		public IDatabase GetDatabase()
 		{
 			var database = new Mock<IDatabase>();
 			return database.Object;
+		}
+
+		public async Task<string> GetString(string key)
+		{
+			return _staticDictionary[key];
+		}
+
+		public async Task SetString(string key, string value)
+		{
+			_staticDictionary[key] = value;
+		}
+
+		public async Task<T> GetObject<T>(string key)
+		{
+			var serializedData = await GetString(key);
+			return JsonConvert.DeserializeObject<T>(serializedData);
+		}
+
+		public async Task SetObject<T>(string key, T value)
+		{
+			var serializedData = JsonConvert.SerializeObject(value);
+			await SetString(key, serializedData);
 		}
 
 		public async Task SubscribeString(string key, Action<string> onPublish)
