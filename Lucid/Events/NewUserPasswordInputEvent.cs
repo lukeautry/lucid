@@ -17,7 +17,7 @@ namespace Lucid.Events
 	{
 		public const string ConfirmPasswordText = "Please confirm your password:";
 
-		public NewUserPasswordInputEvent(IRedisProvider redisProvider = null) : base("new-user-password-input", redisProvider) { }
+		public NewUserPasswordInputEvent(IRedisProvider redisProvider) : base("new-user-password-input", redisProvider) { }
 
 		public override async Task Execute(NewUserPasswordInputEventData data)
 		{

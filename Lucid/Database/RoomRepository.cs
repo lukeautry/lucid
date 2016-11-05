@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Threading.Tasks;
 using Lucid.Models;
 using Dapper;
+using Lucid.Core;
 
 namespace Lucid.Database
 {
@@ -16,6 +18,8 @@ namespace Lucid.Database
 	public class RoomRepository : Repository<Room>, IRoomRepository
 	{
 		public override string TableName => "rooms";
+
+		public RoomRepository(IRedisProvider redisProvider, IDbConnection connection) : base(redisProvider, connection) { }
 
 		public async Task<IEnumerable<Room>> GetByAreaId(int areaId)
 		{

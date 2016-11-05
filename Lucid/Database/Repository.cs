@@ -6,7 +6,6 @@ using Dapper;
 using Lucid.Core;
 using Lucid.Models;
 using Npgsql;
-using System.Linq;
 
 namespace Lucid.Database
 {
@@ -46,13 +45,14 @@ namespace Lucid.Database
 		private readonly IRedisProvider _redisProvider;
 		public abstract string TableName { get; }
 
-		protected Repository(IRedisProvider redisProvider = null)
+		protected Repository(IRedisProvider redisProvider, IDbConnection connection)
 		{
-			_redisProvider = redisProvider ?? new RedisProvider();
+			_redisProvider = redisProvider;
 
 			DefaultTypeMap.MatchNamesWithUnderscores = true;
-			Connection = new NpgsqlConnection("Server=127.0.0.1;Port=5432;User Id = postgres;Password=admin;Database=lucid");
-			Connection.Open();
+			Connection = connection;
+			//Connection = new NpgsqlConnection("Server=127.0.0.1;Port=5432;User Id = postgres;Password=admin;Database=lucid");
+			//Connection.Open();
 		}
 
 		public async Task<T> Get(int id)

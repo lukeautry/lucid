@@ -17,10 +17,10 @@ namespace Lucid.Events
 		public readonly string Key;
 		protected readonly IRedisProvider RedisProvider;
 
-		protected Event(string key, IRedisProvider redisProvider = null)
+		protected Event(string key, IRedisProvider redisProvider)
 		{
 			Key = key;
-			RedisProvider = redisProvider ?? new RedisProvider();
+			RedisProvider = redisProvider;
 		}
 
 		public abstract Task Execute(T data);

@@ -1,13 +1,15 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Data;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Lucid.Core;
 using Lucid.Database;
+using Lucid.Models;
 
 namespace Lucid.Events
 {
 	public class NameInputEvent : BlockingEvent<NameInputEventData>
 	{
-		private readonly IUserRepository _userRepository;
+		private readonly UserRepository _userRepository;
 		private readonly UserMessageQueue _userMessageQueue;
 		public const string MaxLengthText = "Name must be no more than 64 characters.";
 		public const string MinLengthText = "Name should be at least two characters.";
@@ -15,9 +17,9 @@ namespace Lucid.Events
 		public const string AlphaOnlyText = "Name must be letters only.";
 		public const string EnterPasswordText = "Please enter your password:";
 
-		public NameInputEvent(IUserRepository userRepository = null, IRedisProvider redisProvider = null) : base("name-input", redisProvider)
+		public NameInputEvent(IRedisProvider redisProvider, IDbConnection connection) : base("name-input", redisProvider)
 		{
-			_userRepository = userRepository ?? new UserRepository();
+			_userRepository = new UserRepository(RedisProvider, connection);
 			_userMessageQueue = new UserMessageQueue(RedisProvider);
 		}
 
@@ -29,7 +31,7 @@ namespace Lucid.Events
 			var user = await _userRepository.GetByName(data.Name);
 			if (user != null)
 			{
-				await ProcessExistingUser(data, sessionService, user.Id);
+				await ProcessExistingUser(data, sessionService, user);
 				return;
 			}
 
@@ -65,15 +67,15 @@ namespace Lucid.Events
 			return false;
 		}
 
-		private async Task ProcessExistingUser(NameInputEventData data, SessionService sessionService, int userId)
+		private async Task ProcessExistingUser(NameInputEventData data, SessionService sessionService, User user)
 		{
 			await sessionService.Update(data.SessionId, s =>
 			{
 				s.NameInputPending = false;
-				s.LoginData = new LoginData { UserId = userId, PasswordInputPending = true };
+				s.LoginData = new LoginData { UserId = user.Id, PasswordInputPending = true };
 			});
 
-			await _userMessageQueue.Enqueue(data.SessionId, b => b.Add($"Welcome back {data.Name}!").Break().Add(EnterPasswordText));
+			await _userMessageQueue.Enqueue(data.SessionId, b => b.Break().Add($"Welcome back {user.Name}!").Break().Add(EnterPasswordText));
 		}
 
 		private async Task ProcessNewUser(NameInputEventData data, SessionService sessionService)

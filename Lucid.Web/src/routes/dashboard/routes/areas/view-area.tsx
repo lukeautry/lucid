@@ -8,6 +8,7 @@ import { observable } from 'mobx';
 import { EditArea } from './edit-area';
 import { MapEditor } from './map-editor/map-editor';
 import { AddRoom } from './add-room';
+import { EditRoom } from './edit-room';
 
 export const viewAreaPath = `/areas/:id`;
 export const getViewAreaPath = (id: number) => `/areas/${id}`;
@@ -26,9 +27,11 @@ export class ViewArea extends React.Component<IEditAreaProps, {}> {
   @observable private rooms: Room[];
   @observable private isEditingArea = false;
   @observable private isAddingRoom = false;
+  @observable private isEditingRoom = false;
   @observable private areaName: string;
   @observable private areaDescription: string;
   @observable private updateFn?: (newRoomId: number) => Room;
+  @observable private editRoomInstance: Room = {} as any;
 
   constructor(public readonly props: IEditAreaProps) {
     super();
@@ -50,9 +53,10 @@ export class ViewArea extends React.Component<IEditAreaProps, {}> {
                 <i className='material-icons btn' onClick={this.editAreaName} title='Edit Area Details'>mode_edit</i>
               </h1>
               <p className='well description'>{this.areaDescription}</p>
-              <MapEditor area={this.area} addNewRoom={this.addNewRoom} addConnectingRoom={this.addConnectingRoom} updateRoom={this.callUpdateRoom} rooms={this.rooms}/>
+              <MapEditor area={this.area} addNewRoom={this.addNewRoom} editNewRoom={this.editRoom} addConnectingRoom={this.addConnectingRoom} updateRoom={this.callUpdateRoom} rooms={this.rooms}/>
               <EditArea area={this.area} onSave={this.onSave} isOpen={this.isEditingArea} onClose={this.closeEditArea} />
               <AddRoom isOpen={this.isAddingRoom} onSave={this.onAddRoom} onClose={this.closeAddRoom} areaId={this.area.id} />
+              <EditRoom isOpen={this.isEditingRoom} onSave={this.onEditRoom} onClose={this.closeEditRoom} room={this.editRoomInstance} />
             </div>
             : <LinearProgress mode='indeterminate' color={colors.lightBlue300} />
         }
@@ -76,6 +80,8 @@ export class ViewArea extends React.Component<IEditAreaProps, {}> {
 
     this.refreshArea();
   };
+
+  protected onEditRoom = () => this.refreshArea();
 
   private addConnectingRoom = (updateFn: (newRoomId: number) => Room) => {
     this.updateFn = updateFn;
@@ -103,6 +109,11 @@ export class ViewArea extends React.Component<IEditAreaProps, {}> {
     this.isAddingRoom = true;
   };
 
+  private editRoom = (room: Room) => {
+    this.editRoomInstance = room;
+    this.isEditingRoom = true;
+  };
+
   private loadArea() {
     ApiAreasByIdGet({ id: this.props.params.id })
       .then(area => {
@@ -113,4 +124,5 @@ export class ViewArea extends React.Component<IEditAreaProps, {}> {
   }
 
   private closeAddRoom = () => this.isAddingRoom = false;
+  private closeEditRoom = () => this.isEditingRoom = false;
 }

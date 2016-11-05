@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Threading.Tasks;
 using Lucid.Core;
 using Lucid.Database;
@@ -20,18 +21,14 @@ namespace Lucid.Events
 
 	public class ExistingUserPasswordInputEvent : BlockingEvent<ExistingUserPasswordInputEventData>
 	{
-		private readonly IUserRepository _userRepository;
+		private readonly UserRepository _userRepository;
 		private readonly UserMessageQueue _userMessageQueue;
 		private readonly IRoomRepository _roomRepository;
 
-		public ExistingUserPasswordInputEvent(
-				IUserRepository userRepository = null,
-				IRoomRepository roomRepository = null,
-				IRedisProvider redisProvider = null
-			) : base("existing-user-password-input", redisProvider)
+		public ExistingUserPasswordInputEvent(IRedisProvider redisProvider, IDbConnection connection) : base("existing-user-password-input", redisProvider)
 		{
-			_userRepository = userRepository ?? new UserRepository();
-			_roomRepository = roomRepository ?? new RoomRepository();
+			_userRepository = new UserRepository(RedisProvider, connection);
+			_roomRepository = new RoomRepository(RedisProvider, connection);
 			_userMessageQueue = new UserMessageQueue(RedisProvider);
 		}
 
@@ -43,6 +40,12 @@ namespace Lucid.Events
 				await _userMessageQueue.Enqueue(data.SessionId, b => b.Add("That password didn't match. Please try again."));
 				return;
 			}
+
+			await new SessionService(RedisProvider).Update(data.SessionId, s =>
+			{
+				s.LoginData = null;
+				s.UserId = user.Id;
+			});
 
 			await ShowCurrentRoom(data.SessionId, user);
 		}
@@ -58,15 +61,11 @@ namespace Lucid.Events
 			var room = await _roomRepository.Get(user.CurrentRoomId.Value);
 			if (room == null)
 			{
-				Console.WriteLine("Apparently this users currentroomid is invalid.");
+				Console.WriteLine("Apparently this users CurrentRoomId is invalid.");
 				return;
 			}
 
-			await _userMessageQueue.Enqueue(sessionId, b => b
-				.Break()
-				.Add(room.Name)
-				.Break()
-				.Add(room.Description));
+			await new Views.Room(RedisProvider, room).Render(sessionId);
 		}
 	}
 }

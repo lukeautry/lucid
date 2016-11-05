@@ -18,7 +18,7 @@ namespace Lucid.Events
 	/// </summary>
 	public abstract class BlockingEvent<T> : Event<T> where T : BlockingEventData
 	{
-		protected BlockingEvent(string key, IRedisProvider redisProvider = null) : base(key, redisProvider) { }
+		protected BlockingEvent(string key, IRedisProvider redisProvider) : base(key, redisProvider) { }
 
 		public override async Task Enqueue(T data)
 		{

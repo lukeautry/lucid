@@ -1,27 +1,35 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Data;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using Lucid.Events;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Lucid.Core
 {
 	public sealed class Client
 	{
 		private readonly TcpClient _tcpClient;
+		private readonly IRedisProvider _redisProvider;
+		private readonly IDbConnection _connection;
+		private readonly IServiceProvider _serviceProvider;
 
-		public Client(TcpClient tcpClient)
+		public Client(TcpClient tcpClient, IServiceProvider serviceProvider)
 		{
 			_tcpClient = tcpClient;
+			_redisProvider = serviceProvider.GetRequiredService<IRedisProvider>();
+			_connection = serviceProvider.GetRequiredService<IDbConnection>();
+			_serviceProvider = serviceProvider;
 		}
 
 		public async Task Start()
 		{
 			var socketService = new SocketService(_tcpClient);
-			var session = await new SessionService().Initialize();
-			await new ConnectEvent().Enqueue(new ConnectEventData(session.Id));
-			await new UserMessageQueue().Start(session.Id, socketService);
+			var session = await new SessionService(_redisProvider).Initialize();
+			await new ConnectEvent(_redisProvider).Enqueue(new ConnectEventData(session.Id));
+			await new UserMessageQueue(_redisProvider).Start(session.Id, socketService);
 
 			var pendingBuffer = ImmutableArray.Create<byte>();
 			while (true)
@@ -46,7 +54,7 @@ namespace Lucid.Core
 					var command = new string(commandSequence);
 					if (!string.IsNullOrEmpty(command))
 					{
-						await CommandProcessor.Process(session.Id, command);
+						await new CommandProcessor(_redisProvider, _connection, _serviceProvider).Process(session.Id, command);
 						await CommandPendingCleared(session.Id);
 					}
 
@@ -67,7 +75,7 @@ namespace Lucid.Core
 		{
 			while (true)
 			{
-				var session = await new SessionService().Get(sessionId);
+				var session = await new SessionService(_redisProvider).Get(sessionId);
 				if (!session.CommandPending) { return; }
 				
 				await Task.Delay(100);

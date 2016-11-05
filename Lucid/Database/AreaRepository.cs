@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Data;
 using System.Threading.Tasks;
 using Lucid.Models;
 using Dapper;
+using Lucid.Core;
 
 namespace Lucid.Database
 {
@@ -14,6 +16,8 @@ namespace Lucid.Database
 	public class AreaRepository : Repository<Area>, IAreaRepository
 	{
 		public override string TableName => "areas";
+
+		public AreaRepository(IRedisProvider redisProvider, IDbConnection dbConnection) : base(redisProvider, dbConnection) { }
 
 		public async Task<Area> Create(AreaCreationRequest request)
 		{

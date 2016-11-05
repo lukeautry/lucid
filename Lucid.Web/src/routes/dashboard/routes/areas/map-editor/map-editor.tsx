@@ -12,6 +12,7 @@ export interface IMapEditorProps {
   addNewRoom: () => void;
   addConnectingRoom: (callback: (newRoomId: number) => Room) => any;
   updateRoom: (room: Room) => void;
+  editNewRoom: (room: Room) => any;
 }
 
 const directionAugmenters: { [direction: string]: (room: Room, newRoomId: number) => any } = {
@@ -60,6 +61,8 @@ export const MapEditor = (props: IMapEditorProps) => {
     });
   };
 
+  const editRoomHandler = (room: Room) => () => props.editNewRoom(room);
+
   return (
     <div className='map-editor'>
       {
@@ -77,7 +80,7 @@ export const MapEditor = (props: IMapEditorProps) => {
                         <i className={`material-icons arrow west ${cell.hasWestExit ? 'active' : ''}`} onClick={directionHandler(cell, 'west')}>arrow_back</i>
                         <i className={`material-icons arrow north ${cell.hasNorthExit ? 'active' : ''}`} onClick={directionHandler(cell, 'north')}>arrow_upward</i>
                         <i className={`material-icons arrow south ${cell.hasSouthExit ? 'active' : ''}`} onClick={directionHandler(cell, 'south')}>arrow_downward</i>
-                        <i className='edit material-icons btn' title='Edit'>mode_edit</i>
+                        <i className='edit material-icons btn' title='Edit' onClick={editRoomHandler(cell.room)}>mode_edit</i>
                       </Paper>
                     }
                   </div>

@@ -15,6 +15,18 @@ namespace Lucid.Models
 		public Room CurrentRoom { get; set; }
     }
 
+	public class UserUpdateRequest
+	{
+		[Required]
+		public int Id { get; set; }
+
+		[Required]
+		public string Name { get; set; }
+
+		[Required]
+		public int CurrentRoomId { get; set; }
+	}
+
 	public class UserBuilder : ModelBuilder<User>
 	{
 		public UserBuilder(string name, string hashedPassword) : base(new User())

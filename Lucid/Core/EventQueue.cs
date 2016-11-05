@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Lucid.Core
 {
@@ -17,10 +18,12 @@ namespace Lucid.Core
 		public const string QueueKey = "events";
 		private readonly IRedisProvider _redisProvider;
 		private readonly Dictionary<string, Func<string, Task>> _eventMap = new Dictionary<string, Func<string, Task>>();
+		private readonly IServiceProvider _serviceProvider;
 
-		public EventQueue(IRedisProvider redisProvider = null)
+		public EventQueue(IServiceProvider serviceProvider)
 		{
-			_redisProvider = redisProvider ?? new RedisProvider();
+			_redisProvider = serviceProvider.GetRequiredService<IRedisProvider>();
+			_serviceProvider = serviceProvider;
 			RegisterEvents();
 		}
 
@@ -64,26 +67,7 @@ namespace Lucid.Core
 
 		private void RegisterEventType(Type eventType)
 		{
-			var constructor = eventType.GetConstructors().FirstOrDefault();
-
-			dynamic instance;
-			if (constructor != null)
-			{
-				var parameters = constructor.GetParameters();
-				var objects = parameters.Select(parameter => Type.Missing).ToArray();
-
-				instance = constructor.Invoke(objects);
-			}
-			else
-			{
-				instance = Activator.CreateInstance(eventType);
-			}
-
-			if (instance == null)
-			{
-				throw new Exception($"Failed to create instance of type {eventType.Name}");
-			}
-
+			dynamic instance = ActivatorUtilities.CreateInstance(_serviceProvider, eventType);
 			instance.Register(_eventMap);
 		}
 	}

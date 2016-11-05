@@ -10,6 +10,7 @@ namespace Lucid.Core
 		public CreationData CreationData { get; set; }
 		public LoginData LoginData { get; set; }
 		public bool CommandPending { get; set; }
+		public int UserId { get; set; }
 
 		public SessionData(string id)
 		{
@@ -36,9 +37,9 @@ namespace Lucid.Core
 	{
 		private readonly IRedisProvider _redisProvider;
 
-		public SessionService(IRedisProvider redisProvider = null)
+		public SessionService(IRedisProvider redisProvider)
 		{
-			_redisProvider = redisProvider ?? new RedisProvider();
+			_redisProvider = redisProvider;
 		}
 
 		public async Task<SessionData> Initialize()

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Data;
+using System.Threading.Tasks;
 using Lucid.Core;
 using Lucid.Database;
 using Lucid.Models;
@@ -17,13 +18,12 @@ namespace Lucid.Events
 
 	public class NewUserConfirmPasswordInputEvent : BlockingEvent<NewUserConfirmPasswordInputEventData>
 	{
-		private readonly IUserRepository _userRepository;
+		private readonly UserRepository _userRepository;
 		public const string NonMatchingPasswordText = "Passwords must match.";
 
-		public NewUserConfirmPasswordInputEvent(IRedisProvider redisProvider = null, IUserRepository userRepository = null)
-			: base("new-user-confirm-password-input-event", redisProvider)
+		public NewUserConfirmPasswordInputEvent(IRedisProvider redisProvider, IDbConnection connection) : base("new-user-confirm-password-input-event", redisProvider)
 		{
-			_userRepository = userRepository ?? new UserRepository();
+			_userRepository = new UserRepository(RedisProvider, connection);
 		}
 
 		protected override async Task ExecuteBlockingEvent(NewUserConfirmPasswordInputEventData data)

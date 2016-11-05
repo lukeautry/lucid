@@ -14,9 +14,9 @@ namespace Lucid.Core
 	{
 	    private readonly IRedisProvider _redisProvider;
 
-	    public UserMessageQueue(IRedisProvider redisProvider = null)
+	    public UserMessageQueue(IRedisProvider redisProvider)
 	    {
-			_redisProvider = redisProvider ?? new RedisProvider();
+			_redisProvider = redisProvider;
 	    }
 
 	    public async Task Enqueue(string sessionId, Func<UserMessageBuilder, UserMessageBuilder> messageBuilderFunction)

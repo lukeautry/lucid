@@ -18,7 +18,7 @@ namespace Lucid.Events
 		public const string WelcomeMessage = "Welcome to LucidMUD!";
 		public const string NameInputMessage = "Please enter your name:";
 
-		public ConnectEvent(IRedisProvider redisProvider = null) : base("connect", redisProvider) { }
+		public ConnectEvent(IRedisProvider redisProvider) : base("connect", redisProvider) { }
 
 		public override async Task Execute(ConnectEventData data)
 		{
