@@ -1,0 +1,24 @@
+{
+	"compilerOptions": {
+		"target": "es5",
+		"sourceMap": true,
+		"noImplicitAny": true,
+		"noImplicitThis": true,
+		"moduleResolution": "node",
+		"experimentalDecorators": true,
+		"noUnusedLocals": true,
+		"newLine": "LF",
+		"noImplicitReturns": true,
+		"strictNullChecks": true,
+		"removeComments": true,
+		"jsx": "react",
+		"allowJs": true,
+		"lib": [
+			"es6",
+			"dom"
+		]
+	},
+	"exclude": [
+		"node_modules"
+	]
+}

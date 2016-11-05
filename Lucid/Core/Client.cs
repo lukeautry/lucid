@@ -20,7 +20,6 @@ namespace Lucid.Core
 		{
 			var socketService = new SocketService(_tcpClient);
 			var session = await new SessionService().Initialize();
-			var commandQueue = await new CommandQueue(session.Id).Start();
 			await new ConnectEvent().Enqueue(new ConnectEventData(session.Id));
 			await new UserMessageQueue().Start(session.Id, socketService);
 
@@ -36,18 +35,42 @@ namespace Lucid.Core
 				var indexOfReturn = pendingBuffer.IndexOf(13);
 				if (indexOfReturn < 0) { continue; }
 				
-				var commandChars = pendingBuffer
-					.Take(indexOfReturn)
-					.Select(Convert.ToChar)
-					.ToArray();
-
-				var command = new string(commandChars);
-				if (!string.IsNullOrEmpty(command))
+				while (pendingBuffer.Length > 0)
 				{
-					await commandQueue.Enqueue(command);
+					var commandSequence = pendingBuffer
+						.Skip(0)
+						.Take(indexOfReturn)
+						.Select(Convert.ToChar)
+						.ToArray();
+
+					var command = new string(commandSequence);
+					if (!string.IsNullOrEmpty(command))
+					{
+						await CommandProcessor.Process(session.Id, command);
+						await CommandPendingCleared(session.Id);
+					}
+
+					// Usually line breaks come in with [13,10] - not sure what the 10 is, but it's there sometimes
+					var tenIndex = pendingBuffer.IndexOf(10);
+					var enterIndex = pendingBuffer.IndexOf(13);
+					var sliceIndex = tenIndex > enterIndex ? tenIndex : enterIndex;
+
+					pendingBuffer = pendingBuffer.Skip(sliceIndex + 1).ToImmutableArray();
+					indexOfReturn = pendingBuffer.IndexOf(13);
 				}
 
 				pendingBuffer = ImmutableArray.Create<byte>();
+			}
+		}
+
+		public async Task CommandPendingCleared(string sessionId)
+		{
+			while (true)
+			{
+				var session = await new SessionService().Get(sessionId);
+				if (!session.CommandPending) { return; }
+				
+				await Task.Delay(100);
 			}
 		}
 	}

@@ -4,9 +4,8 @@ using Dapper;
 
 namespace Lucid.Database
 {
-	public interface IUserRepository
+	public interface IUserRepository : IRepository<User>
 	{
-		Task<User> Get(int id);
 		Task<User> GetByName(string name);
 		Task<User> Create(User user);
 	}

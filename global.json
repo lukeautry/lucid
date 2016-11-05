@@ -1,6 +1,8 @@
 {
     "projects": [
         "Lucid",
-        "Lucid.Tests"
+        "Lucid.Api",
+        "Lucid.Tests",
+        "Lucid.Web"
     ]
 }

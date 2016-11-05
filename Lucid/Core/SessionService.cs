@@ -9,6 +9,7 @@ namespace Lucid.Core
 		public bool NameInputPending { get; set; }
 		public CreationData CreationData { get; set; }
 		public LoginData LoginData { get; set; }
+		public bool CommandPending { get; set; }
 
 		public SessionData(string id)
 		{
@@ -34,7 +35,6 @@ namespace Lucid.Core
 	public class SessionService
 	{
 		private readonly IRedisProvider _redisProvider;
-		private SessionData _session;
 
 		public SessionService(IRedisProvider redisProvider = null)
 		{
@@ -43,23 +43,18 @@ namespace Lucid.Core
 
 		public async Task<SessionData> Initialize()
 		{
-			_session = new SessionData(Guid.NewGuid().ToString());
-			return await Save(_session);
+			var session = new SessionData(Guid.NewGuid().ToString());
+			return await Save(session);
 		}
 
 		public async Task<SessionData> Get(string sessionId)
 		{
-			if (_session != null) { return _session; }
-
-			_session = await _redisProvider.GetObject<SessionData>(GetSessionKey(sessionId));
-			return _session;
+			return  await _redisProvider.GetObject<SessionData>(GetSessionKey(sessionId));
 		}
 
 		public async Task<SessionData> Save(SessionData data)
 		{
 			await _redisProvider.SetObject(GetSessionKey(data.Id), data);
-			_session = data;
-
 			return data;
 		}
 

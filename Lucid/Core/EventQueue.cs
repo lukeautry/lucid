@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using Lucid.Events;
 using Microsoft.Extensions.DependencyModel;
 using Newtonsoft.Json;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Lucid.Core
 {
@@ -16,7 +16,7 @@ namespace Lucid.Core
 	{
 		public const string QueueKey = "events";
 		private readonly IRedisProvider _redisProvider;
-		private readonly Dictionary<string, Action<string>> _eventMap = new Dictionary<string, Action<string>>();
+		private readonly Dictionary<string, Func<string, Task>> _eventMap = new Dictionary<string, Func<string, Task>>();
 
 		public EventQueue(IRedisProvider redisProvider = null)
 		{
@@ -26,12 +26,12 @@ namespace Lucid.Core
 
 		public void Start()
 		{
-			_redisProvider.SubscribeString(QueueKey, data =>
+			_redisProvider.SubscribeString(QueueKey, async data =>
 			{
 				var dynamicEventData = JsonConvert.DeserializeObject<SerializedEvent<dynamic>>(data);
 				var key = dynamicEventData.Key;
 
-				Action<string> eventHandler;
+				Func<string, Task> eventHandler;
 				var hasEvent = _eventMap.TryGetValue(key, out eventHandler);
 				if (!hasEvent)
 				{
@@ -39,7 +39,7 @@ namespace Lucid.Core
 					return;
 				}
 
-				eventHandler(data);
+				await eventHandler(data);
 			});
 		}
 
@@ -49,11 +49,14 @@ namespace Lucid.Core
 			Assembly.Load(new AssemblyName(library.Name)).GetTypes()
 				.Where(t =>
 				{
+					var typeInfo = t.GetTypeInfo();
+					if (typeInfo.IsAbstract) { return false; }
+
 					var baseType = t.GetTypeInfo().BaseType;
 					if (baseType == null) { return false; }
 
 					var baseTypeInfo = baseType.GetTypeInfo();
-					return baseTypeInfo.IsGenericType && baseTypeInfo.GetGenericTypeDefinition() == typeof(Event<>);
+					return baseTypeInfo.IsGenericType && (baseTypeInfo.GetGenericTypeDefinition() == typeof(Event<>) || baseTypeInfo.GetGenericTypeDefinition() == typeof(BlockingEvent<>));
 				})
 				.ToList()
 				.ForEach(RegisterEventType);

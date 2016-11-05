@@ -3,14 +3,12 @@ using Lucid.Core;
 
 namespace Lucid.Events
 {
-	public class NewUserPasswordInputEventData
+	public class NewUserPasswordInputEventData : BlockingEventData
 	{
 		public readonly string Password;
-		public readonly string SessionId;
 
-		public NewUserPasswordInputEventData(string sessionId, string password)
+		public NewUserPasswordInputEventData(string sessionId, string password) : base(sessionId)
 		{
-			SessionId = sessionId;
 			Password = password;
 		}
 	}

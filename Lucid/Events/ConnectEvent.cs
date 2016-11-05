@@ -25,8 +25,11 @@ namespace Lucid.Events
 			var userMessageQueue = new UserMessageQueue(RedisProvider);
 
 			await userMessageQueue.Enqueue(data.SessionId, b => b.Add(WelcomeMessage).Break());
-			await new SessionService(RedisProvider).Update(data.SessionId, s => s.NameInputPending = true);
 			await userMessageQueue.Enqueue(data.SessionId, b => b.Add(NameInputMessage));
+			await new SessionService(RedisProvider).Update(data.SessionId, s =>
+			{
+				s.NameInputPending = true;
+			});
 		}
 	}
 }

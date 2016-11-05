@@ -1,0 +1,76 @@
+.map-editor {
+    padding: 25px;
+}
+
+.add-new-room-button {
+    margin: 250px auto;
+}
+
+$cellSpace: 35px;
+
+.map-row {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: $cellSpace;
+}
+
+$roomSize: 100px;
+
+.map-cell {
+    width: $roomSize;
+    height: $roomSize;
+    text-align: center;
+    font-size: .75em;
+    position: relative;
+    margin-right: $cellSpace;
+
+    .edit {
+        top: .5em;
+        right: .5em;
+        position: absolute;        
+        cursor: pointer;
+        font-size: 1em;
+    }
+
+    .title {
+        padding: 10px
+    }
+}
+
+.arrow {
+    position: absolute;
+    color: #c5c5c5;
+    font-size: 1.25em;
+    cursor: pointer;
+
+    $sideOffset: .75em;
+    $forwardOffset: 1.6em;
+
+    &:hover {
+        color: rgb(41, 182, 246);
+    }
+
+    &.active {
+        color: black;    
+    }
+
+    &.east {
+        right: -$forwardOffset;
+        bottom: $sideOffset;
+    }
+
+    &.west {
+        left: -$forwardOffset;
+        top: $sideOffset;
+    }
+
+    &.north {
+        right: $sideOffset;
+        top: -$forwardOffset;
+    }
+
+    &.south {
+        left: $sideOffset;
+        bottom: -$forwardOffset;
+    }
+}

@@ -7,6 +7,10 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Lucid", "Lucid\Lucid.xproj"
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Lucid.Tests", "Lucid.Tests\Lucid.Tests.xproj", "{7018C0B2-4677-44D1-BD76-157E23DB8EEC}"
 EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Lucid.Api", "Lucid.Api\Lucid.Api.xproj", "{035F73D4-644B-4013-A5F7-FA592F3B965D}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Lucid.Web", "Lucid.Web\Lucid.Web.xproj", "{2BC0AF47-F47E-4AD1-882C-E08249BB505A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +25,14 @@ Global
 		{7018C0B2-4677-44D1-BD76-157E23DB8EEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7018C0B2-4677-44D1-BD76-157E23DB8EEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7018C0B2-4677-44D1-BD76-157E23DB8EEC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{035F73D4-644B-4013-A5F7-FA592F3B965D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{035F73D4-644B-4013-A5F7-FA592F3B965D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{035F73D4-644B-4013-A5F7-FA592F3B965D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{035F73D4-644B-4013-A5F7-FA592F3B965D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2BC0AF47-F47E-4AD1-882C-E08249BB505A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BC0AF47-F47E-4AD1-882C-E08249BB505A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BC0AF47-F47E-4AD1-882C-E08249BB505A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BC0AF47-F47E-4AD1-882C-E08249BB505A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

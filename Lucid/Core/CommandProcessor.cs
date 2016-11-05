@@ -7,25 +7,25 @@ namespace Lucid.Core
     {
 	    public static async Task Process(string sessionId, string command)
 	    {
-		    var session = await new SessionService().Get(sessionId);
-		    if (session.NameInputPending)
-		    {
-			    await new NameInputEvent().Enqueue(new NameInputEventData(command, sessionId));
+			var session = await new SessionService().Get(sessionId);
+			if (session.NameInputPending)
+			{
+				await new NameInputEvent().Enqueue(new NameInputEventData(command, sessionId));
 				return;
 			}
 
-		    if (session.LoginData != null)
-		    {
-			    var processed = await ProcessLoginFlow(command, session);
-			    if (processed) { return; }
-		    }
-
-		    if (session.CreationData != null)
-		    {
-			    var processed = await ProcessCreationFlow(command, session);
+			if (session.LoginData != null)
+			{
+				var processed = await ProcessLoginFlow(command, session);
 				if (processed) { return; }
-		    }
-	    }
+			}
+
+			if (session.CreationData != null)
+			{
+				var processed = await ProcessCreationFlow(command, session);
+				if (processed) { return; }
+			}
+		}
 
 	    private static async Task<bool> ProcessCreationFlow(string command, SessionData session)
 	    {
@@ -54,5 +54,5 @@ namespace Lucid.Core
 
 			return false;
 	    }
-    }
+	}
 }

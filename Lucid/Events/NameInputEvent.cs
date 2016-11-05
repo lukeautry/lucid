@@ -1,13 +1,11 @@
-﻿using System;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Lucid.Core;
 using Lucid.Database;
-using Lucid.Models;
 
 namespace Lucid.Events
 {
-	public class NameInputEvent : Event<NameInputEventData>
+	public class NameInputEvent : BlockingEvent<NameInputEventData>
 	{
 		private readonly IUserRepository _userRepository;
 		private readonly UserMessageQueue _userMessageQueue;
@@ -23,7 +21,7 @@ namespace Lucid.Events
 			_userMessageQueue = new UserMessageQueue(RedisProvider);
 		}
 
-		public override async Task Execute(NameInputEventData data)
+		protected override async Task ExecuteBlockingEvent(NameInputEventData data)
 		{
 			if (!await IsValidName(data)) { return; }
 
@@ -34,7 +32,7 @@ namespace Lucid.Events
 				await ProcessExistingUser(data, sessionService, user.Id);
 				return;
 			}
-			
+
 			await ProcessNewUser(data, sessionService);
 		}
 
@@ -95,15 +93,13 @@ namespace Lucid.Events
 		}
 	}
 
-	public class NameInputEventData
+	public class NameInputEventData : BlockingEventData
 	{
 		public readonly string Name;
-		public readonly string SessionId;
 
-		public NameInputEventData(string name, string sessionId)
+		public NameInputEventData(string name, string sessionId) : base(sessionId)
 		{
 			Name = name;
-			SessionId = sessionId;
 		}
 	}
 }
