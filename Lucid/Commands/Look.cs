@@ -9,20 +9,26 @@ namespace Lucid.Commands
 {
 	public class Look : Command
 	{
-		private readonly UserRepository _userRepository;
+		private readonly IUserRepository _userRepository;
 		private readonly IRoomRepository _roomRepository;
 
-		public Look(IRedisProvider redisProvider, IDbConnection connection) : base(new[] { "l", "lo", "loo", "look" }, redisProvider)
+		public Look(IRedisProvider redisProvider, IUserRepository userRepository, IRoomRepository roomRepository) : base(new[] { "l", "lo", "loo", "look" }, redisProvider)
 		{
-			_userRepository = new UserRepository(redisProvider, connection);
-			_roomRepository = new RoomRepository(redisProvider, connection);
+			_userRepository = userRepository;
+			_roomRepository = roomRepository;
 		}
 
 		public override async Task Process(string sessionId)
 		{
 			var session = await new SessionService(RedisProvider).Get(sessionId);
+			if (!session.UserId.HasValue)
+			{
+				// TODO: Handle
+				Console.WriteLine($"Session {sessionId} tried to look with no user ID");
+				return;
+			}
 
-			var user = await _userRepository.Get(session.UserId);
+			var user = await _userRepository.Get(session.UserId.Value);
 			if (!user.CurrentRoomId.HasValue)
 			{
 				Console.WriteLine($"User {user.Id} doesn't have a current room...that is a problem.");

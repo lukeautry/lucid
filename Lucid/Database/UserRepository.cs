@@ -11,6 +11,7 @@ namespace Lucid.Database
 	{
 		Task<User> GetByName(string name);
 		Task<User> Create(User model);
+		Task<User> Modify(int userId, Action<User> modifyFunc);
 	}
 
 	public class UserRepository : Repository<User>, IUserRepository
@@ -51,7 +52,7 @@ namespace Lucid.Database
 			return updatedUser;
 		}
 
-		internal async Task<User> Modify(int userId, Action<User> modifyFunc)
+		public async Task<User> Modify(int userId, Action<User> modifyFunc)
 		{
 			var existingUser = await Get(userId);
 			modifyFunc(existingUser);

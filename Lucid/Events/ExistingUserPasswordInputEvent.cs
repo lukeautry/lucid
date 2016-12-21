@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Threading.Tasks;
 using Lucid.Core;
 using Lucid.Database;
@@ -25,7 +24,11 @@ namespace Lucid.Events
 		private readonly UserMessageQueue _userMessageQueue;
 		private readonly IRoomRepository _roomRepository;
 
-		public ExistingUserPasswordInputEvent(IRedisProvider redisProvider, IUserRepository userRepository, IRoomRepository roomRepository) : base("existing-user-password-input", redisProvider)
+		public ExistingUserPasswordInputEvent(
+			IRedisProvider redisProvider,
+			IUserRepository userRepository,
+			IRoomRepository roomRepository
+			) : base("existing-user-password-input", redisProvider)
 		{
 			_userRepository = userRepository;
 			_roomRepository = roomRepository;

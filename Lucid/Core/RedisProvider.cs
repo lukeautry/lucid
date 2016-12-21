@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using StackExchange.Redis;
+using System.Linq;
 
 namespace Lucid.Core
 {
@@ -14,6 +16,13 @@ namespace Lucid.Core
 		Task SubscribeString(string key, Action<string> onPublish);
 		Task Subscribe<T>(string key, Action<T> onPublish);
 		Task Publish<T>(string key, T data);
+		Task HashSet<T>(string hashKey, string key, T value);
+		Task<T> HashGet<T>(string hashKey, string key);
+		Task HashDelete(string hashKey, string key);
+		Task<IEnumerable<string>> HashGetKeys(string hashKey);
+		Task<IEnumerable<T>> HashGetValues<T>(string hashKey);
+		Task<Dictionary<string, T>> HashGetDictionary<T>(string hashKey);
+		Task Reset();
 	}
 
 	public class RedisProvider : IRedisProvider
@@ -69,6 +78,54 @@ namespace Lucid.Core
 
 			var subscriber = Redis.GetSubscriber();
 			await subscriber.PublishAsync(key, serializedData);
+		}
+
+		public async Task HashSet<T>(string hashKey, string key, T value)
+		{
+			var serializedData = JsonConvert.SerializeObject(value);
+			await Redis.GetDatabase().HashSetAsync(hashKey, new[] { new HashEntry(key, serializedData) });
+		}
+
+		public async Task<T> HashGet<T>(string hashKey, string key)
+		{
+			var value = await Redis.GetDatabase().HashGetAsync(hashKey, key);
+			return JsonConvert.DeserializeObject<T>(value);
+		}
+
+		public async Task HashDelete(string hashKey, string key)
+		{
+			await Redis.GetDatabase().HashDeleteAsync(hashKey, key);
+		}
+
+		public async Task<IEnumerable<string>> HashGetKeys(string hashKey)
+		{
+			var hashKeys = await Redis.GetDatabase().HashKeysAsync(hashKey);
+			return hashKeys.Select(k => (string) k);
+		}
+
+		public async Task<IEnumerable<T>> HashGetValues<T>(string hashKey)
+		{
+			var hashValues = await Redis.GetDatabase().HashValuesAsync(hashKey);
+			return hashValues.Select(value => JsonConvert.DeserializeObject<T>(value));
+		}
+
+		public async Task<Dictionary<string, T>> HashGetDictionary<T>(string hashKey)
+		{
+			var hashKeys = await HashGetKeys(hashKey);
+
+			var dictionary = new Dictionary<string, T>();
+			foreach (var key in hashKeys)
+			{
+				var value = await HashGet<T>(hashKey, key);
+				dictionary.Add(key, value);
+			}
+
+			return dictionary;
+		}
+
+		public async Task Reset()
+		{
+			await Redis.GetDatabase().KeyDeleteAsync(SessionService.SessionKey);
 		}
 	}
 }

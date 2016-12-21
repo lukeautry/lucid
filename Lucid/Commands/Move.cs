@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Threading.Tasks;
 using Lucid.Core;
 using Lucid.Database;
@@ -9,20 +8,25 @@ namespace Lucid.Commands
 {
 	public abstract class Move : Command
 	{
-		protected readonly UserRepository _userRepository;
-		private readonly RoomRepository _roomRepository;
+		protected readonly IUserRepository _userRepository;
+		private readonly IRoomRepository _roomRepository;
 
-		protected Move(string[] keys, IRedisProvider redisProvider, IDbConnection connection) : base(keys, redisProvider)
+		protected Move(string[] keys, IRedisProvider redisProvider, IUserRepository userRepository, IRoomRepository roomRepository) : base(keys, redisProvider)
 		{
-			_userRepository = new UserRepository(redisProvider, connection);
-			_roomRepository = new RoomRepository(redisProvider, connection);
+			_userRepository = userRepository;
+			_roomRepository = roomRepository;
 		}
 
 		public override async Task Process(string sessionId)
 		{
 			var session = await new SessionService(RedisProvider).Get(sessionId);
+			if (!session.UserId.HasValue)
+			{
+				// TODO: Handle unrecognized input
+				return;
+			}
 
-			var user = await _userRepository.Get(session.UserId);
+			var user = await _userRepository.Get(session.UserId.Value);
 			if (!user.CurrentRoomId.HasValue)
 			{
 				Console.WriteLine("Current user doesn't have a current room ID...");
@@ -50,37 +54,37 @@ namespace Lucid.Commands
 
 	public sealed class East : Move
 	{
-		public East(IRedisProvider redisProvider, IDbConnection connection) : base(new[] {"e", "ea", "eas", "east"}, redisProvider, connection) { }
+		public East(IRedisProvider redisProvider, IUserRepository userRepository, IRoomRepository roomRepository) : base(new[] {"e", "ea", "eas", "east"}, redisProvider, userRepository, roomRepository) { }
 		protected override int? GetDestinationRoomId(Room currentRoom) { return currentRoom.EastRoomId; }
 	}
 
 	public sealed class South : Move
 	{
-		public South(IRedisProvider redisProvider, IDbConnection connection) : base(new[] { "s", "so", "sou", "sout", "south" }, redisProvider, connection) { }
+		public South(IRedisProvider redisProvider, IUserRepository userRepository, IRoomRepository roomRepository) : base(new[] { "s", "so", "sou", "sout", "south" }, redisProvider, userRepository, roomRepository) { }
 		protected override int? GetDestinationRoomId(Room currentRoom) { return currentRoom.SouthRoomId; }
 	}
 
 	public sealed class West : Move
 	{
-		public West(IRedisProvider redisProvider, IDbConnection connection) : base(new[] { "w", "we", "wes", "west" }, redisProvider, connection) { }
+		public West(IRedisProvider redisProvider, IUserRepository userRepository, IRoomRepository roomRepository) : base(new[] { "w", "we", "wes", "west" }, redisProvider, userRepository, roomRepository) { }
 		protected override int? GetDestinationRoomId(Room currentRoom) { return currentRoom.WestRoomId; }
 	}
 
 	public sealed class North : Move
 	{
-		public North(IRedisProvider redisProvider, IDbConnection connection) : base(new[] { "n", "no", "nor", "nort", "north" }, redisProvider, connection) { }
+		public North(IRedisProvider redisProvider, IUserRepository userRepository, IRoomRepository roomRepository) : base(new[] { "n", "no", "nor", "nort", "north" }, redisProvider, userRepository, roomRepository) { }
 		protected override int? GetDestinationRoomId(Room currentRoom) { return currentRoom.NorthRoomId; }
 	}
 
 	public sealed class Up : Move
 	{
-		public Up(IRedisProvider redisProvider, IDbConnection connection) : base(new[] { "u", "up" }, redisProvider, connection) { }
+		public Up(IRedisProvider redisProvider, IUserRepository userRepository, IRoomRepository roomRepository) : base(new[] { "u", "up" }, redisProvider, userRepository, roomRepository) { }
 		protected override int? GetDestinationRoomId(Room currentRoom) { return currentRoom.UpRoomId; }
 	}
 
 	public sealed class Down : Move
 	{
-		public Down(IRedisProvider redisProvider, IDbConnection connection) : base(new[] { "d", "do", "dow", "down" }, redisProvider, connection) { }
+		public Down(IRedisProvider redisProvider, IUserRepository userRepository, IRoomRepository roomRepository) : base(new[] { "d", "do", "dow", "down" }, redisProvider, userRepository, roomRepository) { }
 		protected override int? GetDestinationRoomId(Room currentRoom) { return currentRoom.DownRoomId; }
 	}
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Lucid.Core
@@ -10,7 +11,7 @@ namespace Lucid.Core
 		public CreationData CreationData { get; set; }
 		public LoginData LoginData { get; set; }
 		public bool CommandPending { get; set; }
-		public int UserId { get; set; }
+		public int? UserId { get; set; }
 
 		public SessionData(string id)
 		{
@@ -35,6 +36,7 @@ namespace Lucid.Core
 
 	public class SessionService
 	{
+		public const string SessionKey = "sessions";
 		private readonly IRedisProvider _redisProvider;
 
 		public SessionService(IRedisProvider redisProvider)
@@ -50,18 +52,13 @@ namespace Lucid.Core
 
 		public async Task<SessionData> Get(string sessionId)
 		{
-			return  await _redisProvider.GetObject<SessionData>(GetSessionKey(sessionId));
+			return await _redisProvider.HashGet<SessionData>(SessionKey, sessionId);
 		}
 
 		public async Task<SessionData> Save(SessionData data)
 		{
-			await _redisProvider.SetObject(GetSessionKey(data.Id), data);
+			await _redisProvider.HashSet(SessionKey, data.Id, data);
 			return data;
-		}
-
-		public static string GetSessionKey(string sessionId)
-		{
-			return $"sessions:{sessionId}";
 		}
 
 		public async Task<SessionData> Update(string sessionId, Action<SessionData> updateFunc)
@@ -70,6 +67,11 @@ namespace Lucid.Core
 			updateFunc(session);
 
 			return await Save(session);
+		}
+
+		public async Task<Dictionary<string, SessionData>> GetSessions()
+		{
+			return await _redisProvider.HashGetDictionary<SessionData>(SessionKey);
 		}
 	}
 }

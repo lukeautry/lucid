@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Dapper;
 using Lucid.Core;
 using Lucid.Models;
-using Npgsql;
 
 namespace Lucid.Database
 {
@@ -51,17 +50,12 @@ namespace Lucid.Database
 
 			DefaultTypeMap.MatchNamesWithUnderscores = true;
 			Connection = connection;
-			//Connection = new NpgsqlConnection("Server=127.0.0.1;Port=5432;User Id = postgres;Password=admin;Database=lucid");
-			//Connection.Open();
 		}
 
 		public async Task<T> Get(int id)
 		{
 			var cached = await CacheGetById(id);
-			if (cached != null)
-			{
-				return cached;
-			}
+			if (cached != null) { return cached; }
 
 			var model = await Connection.QueryFirstOrDefaultAsync<T>($"select * from {TableName} where Id = @Id", new { id });
 			if (model != null)

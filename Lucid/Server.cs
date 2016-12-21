@@ -36,7 +36,12 @@ namespace Lucid
 		private static void StartListener(IServiceProvider serviceProvider)
 		{
 			var listener = new Listener(5001, serviceProvider);
-			Task.Run(async () => await listener.Listen()).Wait();
+			Task.Run(async () =>
+			{
+				var redisProvider = serviceProvider.GetRequiredService<IRedisProvider>();
+				await redisProvider.Reset();
+				await listener.Listen();
+			}).Wait();
 		}
 
 		private static void StartEventQueue(IServiceProvider serviceProvider)
