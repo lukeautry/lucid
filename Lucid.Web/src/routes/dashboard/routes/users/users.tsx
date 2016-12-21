@@ -1,6 +1,6 @@
 import './users.scss';
 import * as React from 'react';
-import { ApiUsersGet, User } from '../../../../api/api';
+import { ApiUsersGet, IUser } from '../../../../api/api';
 import { UserList } from './user-list';
 import LinearProgress from 'material-ui/LinearProgress';
 import * as colors from 'material-ui/styles/colors';
@@ -11,7 +11,7 @@ export const usersPath = '/users';
 
 @observer
 export class Users extends React.Component<{}, {}> {
-  @observable private users: User[];
+  @observable private users: IUser[];
   @observable private isLoading = true;
 
   public componentDidMount() {

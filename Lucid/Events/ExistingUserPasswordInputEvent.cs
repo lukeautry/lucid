@@ -21,14 +21,14 @@ namespace Lucid.Events
 
 	public class ExistingUserPasswordInputEvent : BlockingEvent<ExistingUserPasswordInputEventData>
 	{
-		private readonly UserRepository _userRepository;
+		private readonly IUserRepository _userRepository;
 		private readonly UserMessageQueue _userMessageQueue;
 		private readonly IRoomRepository _roomRepository;
 
-		public ExistingUserPasswordInputEvent(IRedisProvider redisProvider, IDbConnection connection) : base("existing-user-password-input", redisProvider)
+		public ExistingUserPasswordInputEvent(IRedisProvider redisProvider, IUserRepository userRepository, IRoomRepository roomRepository) : base("existing-user-password-input", redisProvider)
 		{
-			_userRepository = new UserRepository(RedisProvider, connection);
-			_roomRepository = new RoomRepository(RedisProvider, connection);
+			_userRepository = userRepository;
+			_roomRepository = roomRepository;
 			_userMessageQueue = new UserMessageQueue(RedisProvider);
 		}
 

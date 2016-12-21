@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ApiAreasGet, Area } from '../../../../api/api';
+import { ApiAreasGet, IArea } from '../../../../api/api';
 import LinearProgress from 'material-ui/LinearProgress';
 import * as colors from 'material-ui/styles/colors';
 import { observable } from 'mobx';
@@ -15,7 +15,7 @@ export const areasPath = '/areas';
 
 @observer
 export class Areas extends React.Component<{}, {}> {
-  @observable private areas: Area[];
+  @observable private areas: IArea[];
   @observable private isAddingNewArea = false;
 
   public componentDidMount() {
@@ -63,7 +63,7 @@ export class Areas extends React.Component<{}, {}> {
 
   private addNewArea = () => this.isAddingNewArea = true;
   private closeAddNewArea = () => this.isAddingNewArea = false;
-  private onSave = (area: Area) => {
+  private onSave = (area: IArea) => {
     this.areas.push(area);
     this.closeAddNewArea();
   };

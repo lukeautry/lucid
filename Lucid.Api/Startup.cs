@@ -1,10 +1,13 @@
-﻿using Lucid.Database;
+﻿using System.Data;
+using Lucid.Core;
+using Lucid.Database;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 
 namespace Lucid.Api
 {
@@ -44,6 +47,16 @@ namespace Lucid.Api
 			});
 
 			services.AddMvc();
+
+			services.AddScoped<IRedisProvider, RedisProvider>();
+			services.AddTransient(typeof(IDbConnection), p =>
+			{
+				var connection = new NpgsqlConnection("Server=127.0.0.1;Port=5432;User Id = postgres;Password=admin;Database=lucid");
+				connection.Open();
+
+				return connection;
+			});
+
 			services.AddScoped<IUserRepository, UserRepository>();
 			services.AddScoped<IAreaRepository, AreaRepository>();
 			services.AddScoped<IRoomRepository, RoomRepository>();

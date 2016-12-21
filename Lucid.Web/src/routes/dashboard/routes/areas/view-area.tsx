@@ -1,6 +1,6 @@
 import './view-area.scss';
 import * as React from 'react';
-import { Area, Room, ApiAreasByIdRoomsGet, ApiAreasByIdGet, ApiRoomsPatch } from '../../../../api/api';
+import { IArea, IRoom, ApiAreasByIdRoomsGet, ApiAreasByIdGet, ApiRoomsPatch } from '../../../../api/api';
 import LinearProgress from 'material-ui/LinearProgress';
 import * as colors from 'material-ui/styles/colors';
 import { observer } from 'mobx-react';
@@ -23,15 +23,15 @@ export type Direction = 'north' | 'east' | 'south' | 'west' | 'up' | 'down';
 
 @observer
 export class ViewArea extends React.Component<IEditAreaProps, {}> {
-  @observable private area: Area;
-  @observable private rooms: Room[];
+  @observable private area: IArea;
+  @observable private rooms: IRoom[];
   @observable private isEditingArea = false;
   @observable private isAddingRoom = false;
   @observable private isEditingRoom = false;
   @observable private areaName: string;
   @observable private areaDescription: string;
-  @observable private updateFn?: (newRoomId: number) => Room;
-  @observable private editRoomInstance: Room = {} as any;
+  @observable private updateFn?: (newRoomId: number) => IRoom;
+  @observable private editRoomInstance: IRoom = {} as any;
 
   constructor(public readonly props: IEditAreaProps) {
     super();
@@ -66,12 +66,12 @@ export class ViewArea extends React.Component<IEditAreaProps, {}> {
 
   protected editAreaName = () => this.isEditingArea = true;
   protected closeEditArea = () => this.isEditingArea = false;
-  protected onSave = (area: Area) => {
+  protected onSave = (area: IArea) => {
     this.setArea(area);
     this.closeEditArea();
   };
 
-  protected onAddRoom = (room: Room) => {
+  protected onAddRoom = (room: IRoom) => {
     if (this.updateFn) {
       const augmentedRoom = this.updateFn(room.id);
       this.callUpdateRoom(augmentedRoom);
@@ -83,12 +83,12 @@ export class ViewArea extends React.Component<IEditAreaProps, {}> {
 
   protected onEditRoom = () => this.refreshArea();
 
-  private addConnectingRoom = (updateFn: (newRoomId: number) => Room) => {
+  private addConnectingRoom = (updateFn: (newRoomId: number) => IRoom) => {
     this.updateFn = updateFn;
     this.isAddingRoom = true;
   }
 
-  private callUpdateRoom = (room: Room) => {
+  private callUpdateRoom = (room: IRoom) => {
     ApiRoomsPatch({ request: room })
       .then(() => this.refreshArea());
   }
@@ -98,7 +98,7 @@ export class ViewArea extends React.Component<IEditAreaProps, {}> {
     this.closeAddRoom();
   }
 
-  private setArea(area: Area) {
+  private setArea(area: IArea) {
     this.area = area;
     this.areaName = area.name;
     this.areaDescription = area.description || '';
@@ -109,7 +109,7 @@ export class ViewArea extends React.Component<IEditAreaProps, {}> {
     this.isAddingRoom = true;
   };
 
-  private editRoom = (room: Room) => {
+  private editRoom = (room: IRoom) => {
     this.editRoomInstance = room;
     this.isEditingRoom = true;
   };

@@ -9,7 +9,7 @@ namespace Lucid.Events
 {
 	public class NameInputEvent : BlockingEvent<NameInputEventData>
 	{
-		private readonly UserRepository _userRepository;
+		private readonly IUserRepository _userRepository;
 		private readonly UserMessageQueue _userMessageQueue;
 		public const string MaxLengthText = "Name must be no more than 64 characters.";
 		public const string MinLengthText = "Name should be at least two characters.";
@@ -17,9 +17,9 @@ namespace Lucid.Events
 		public const string AlphaOnlyText = "Name must be letters only.";
 		public const string EnterPasswordText = "Please enter your password:";
 
-		public NameInputEvent(IRedisProvider redisProvider, IDbConnection connection) : base("name-input", redisProvider)
+		public NameInputEvent(IRedisProvider redisProvider, IUserRepository userRepository) : base("name-input", redisProvider)
 		{
-			_userRepository = new UserRepository(RedisProvider, connection);
+			_userRepository = userRepository;
 			_userMessageQueue = new UserMessageQueue(RedisProvider);
 		}
 

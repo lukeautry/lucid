@@ -1,7 +1,10 @@
-﻿import * as fs from 'fs';
+﻿import { ISchema } from './swagger';
+/* tslint:disable:no-console */
+import * as fs from 'fs';
 import * as Swagger from './swagger';
 import * as handlebars from 'handlebars';
 import * as request from 'superagent';
+import * as yargs from 'yargs';
 
 interface ITemplateView {
   models: ITemplateModel[];
@@ -40,10 +43,16 @@ interface ITemplateOperationParameters {
   parameterType: string;
 }
 
+process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
+const baseApiUrl = yargs.argv.baseApiUrl;
+if (!baseApiUrl) {
+  throw new Error('No baseApiUrl provided.');
+}
+
 const getSwaggerJson = () => {
   return new Promise<Swagger.ISpec>((resolve, reject) => {
     request
-      .get('http://localhost:5000/swagger/v1/swagger.json')
+      .get(`${baseApiUrl}/swagger/v1/swagger.json`)
       .set('Accept', 'application/json')
       .end((err, res) => {
         resolve(res.body);
@@ -54,6 +63,11 @@ const getSwaggerJson = () => {
 getSwaggerJson();
 
 const template = handlebars.compile(`import * as request from 'superagent';
+
+export const baseUrl = '{{baseUrl}}';
+
+let accessToken: string | undefined = '';
+export const setAccessToken = (token: string) => accessToken = token;
 
 {{#models}}
 export interface {{name}} {
@@ -70,7 +84,7 @@ export interface IRequestParams {
   body?: Object;
 }
 
-const executeRequest = <T>(params: IRequestParams) => {
+const executeRequest = async <T>(params: IRequestParams) => {
   return new Promise<T>((resolve, reject) => {
     let req = request(params.method, \`{{baseUrl}}\${params.url}\`)
       .set('Content-Type', 'application/json');
@@ -78,8 +92,17 @@ const executeRequest = <T>(params: IRequestParams) => {
     if (params.queryParameters) { req = req.query(params.queryParameters); }
     if (params.body) { req.send(params.body); }
 
+    if (accessToken) {
+      req.set('Authorization', \`Bearer \${accessToken}\`);
+    }
+
     req.end((error: any, response: any) => {
       if (error || !response.ok) {
+        if (response && response.body && response.body.ExceptionMessage) {
+          reject(response.body.ExceptionMessage);
+          return;
+        }
+
         reject(error);
       } else {
         resolve(response.body);
@@ -115,12 +138,13 @@ export const {{id}} = ({{signature}}) => {
   {{/if}}
   return executeRequest<{{returnType}}>(requestParams);
 };
-
 {{/operations}}
 {{/paths}}
 `);
 
-const getTypeFromRef = ($ref: string) => $ref.replace('#/definitions/', '');
+const getTypeFromRef = ($ref: string) => {
+  return `I${$ref.replace('#/definitions/', '')}`;
+};
 
 const getPropertyTypeFromSwaggerProperty = (property: Swagger.ISchema): string => {
   if (property.type === 'integer') { return 'number'; }
@@ -145,14 +169,21 @@ const getPropertyTypeFromSwaggerProperty = (property: Swagger.ISchema): string =
   return 'any';
 };
 
-const getPropertyTypeFromSwaggerParameter = (parameter: Swagger.IBaseParameter): string => {
-  const pathParameter = parameter as Swagger.IPathParameter;
-  if (pathParameter.type) {
-    if (pathParameter.type === 'integer') { return 'number'; }
-    if (pathParameter.type === 'boolean') { return 'boolean'; }
-    if (pathParameter.type === 'string') {
-      return pathParameter.type === 'date-time' ? 'Date' : 'string';
+const getTypeScriptTypeFromSwaggerType = (schema: ISchema) => {
+  if (schema.type === 'integer') { return 'number'; }
+    if (schema.type === 'boolean') { return 'boolean'; }
+    if (schema.type === 'string') {
+      return schema.format === 'date-time' ? 'Date' : 'string';
     }
+
+    return undefined;
+};
+
+const getPropertyTypeFromSwaggerParameter = (parameter: Swagger.IBaseParameter): string => {
+  const queryParameter = parameter as Swagger.IQueryParameter;
+  if (queryParameter.type) {
+    const tsType = getTypeScriptTypeFromSwaggerType(queryParameter as ISchema);
+    if (tsType) { return tsType; }
   }
 
   const bodyParameter = parameter as Swagger.IBodyParameter;
@@ -164,7 +195,11 @@ const getPropertyTypeFromSwaggerParameter = (parameter: Swagger.IBaseParameter):
 
     if (schema.type === 'array') {
       const items = schema.items as Swagger.ISchema;
-      return `${getTypeFromRef(items.$ref as string)}[]`;
+      if (items.$ref) { return `${getTypeFromRef(items.$ref as string)}[]`; }
+      if (items.type) {
+        const tsType = getTypeScriptTypeFromSwaggerType(items);
+        if (tsType) { return `${tsType}[]`; }
+      }
     }
   }
 
@@ -179,7 +214,7 @@ const getTemplateView = (swagger: Swagger.ISpec): ITemplateView => {
   if (!paths) { throw new Error(); }
 
   return {
-    baseUrl: `${swagger.host}${(swagger.basePath || '').replace(/\/$/, '')}`,
+    baseUrl: baseApiUrl,
     paths: Object.keys(paths).map(pathKey => {
       const methods = ['get', 'post', 'delete', 'patch', 'put', 'options', 'head'];
       const path = paths[pathKey];
@@ -189,8 +224,9 @@ const getTemplateView = (swagger: Swagger.ISpec): ITemplateView => {
           .filter(operationKey => methods.find(m => m === operationKey))
           .map(operationKey => {
             const operation = (path as any)[operationKey] as Swagger.IOperation;
-            const operationId = operation.operationId;
-            if (!operationId) { throw new Error(); }
+            if (!operation.operationId) { throw new Error(); }
+
+            const operationId = operation.operationId.replace('_', '');
 
             const parameters = operation.parameters;
             const operationParameters = new Array<ITemplateOperationParameters>();
@@ -207,25 +243,27 @@ const getTemplateView = (swagger: Swagger.ISpec): ITemplateView => {
               paramsInterfaceName = `I${operationId.charAt(0).toUpperCase() + operationId.slice(1)}Params`;
               signature = `params: ${paramsInterfaceName}`;
               parameters.forEach(parameter => {
+                const parameterName = parameter.name;
+
                 operationParameters.push({
-                  parameterName: parameter.name,
+                  parameterName,
                   parameterType: getPropertyTypeFromSwaggerParameter(parameter)
                 });
 
                 if (parameter.in === 'path') {
-                  urlTemplate = urlTemplate.replace(parameter.name, `params.${parameter.name}`);
+                  urlTemplate = urlTemplate.replace(parameter.name, `params.${parameterName}`);
                   return;
                 }
 
                 if (parameter.in === 'query') {
                   queryParameters = queryParameters || new Array<string>();
-                  queryParameters.push(parameter.name);
+                  queryParameters.push(parameterName);
                   return;
                 }
 
                 if (parameter.in === 'body') {
                   hasBodyParameter = true;
-                  bodyParameter = parameter.name;
+                  bodyParameter = parameterName;
                 }
               });
             }
@@ -259,7 +297,7 @@ const getTemplateView = (swagger: Swagger.ISpec): ITemplateView => {
       if (!properties) { throw new Error(); }
 
       return {
-        name: definitionKey,
+        name: `I${definitionKey}`,
         properties: Object.keys(properties).map(propertyKey => {
           const property = properties[propertyKey];
           const isRequired = definition.required && definition.required.find(propertyName => propertyName === propertyKey);
@@ -277,9 +315,8 @@ const getTemplateView = (swagger: Swagger.ISpec): ITemplateView => {
 getSwaggerJson()
   .then(swaggerSpec => {
     try {
-      swaggerSpec.host = "http://localhost:5000";
       const compiled = template(getTemplateView(swaggerSpec));
-      fs.writeFileSync('./src/api/api.ts', compiled);
+      fs.writeFileSync(`${__dirname}/src/api/api.ts`, compiled);
       console.log('Api file generated!');
     } catch (err) {
       console.log(err);

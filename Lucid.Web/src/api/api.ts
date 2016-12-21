@@ -1,40 +1,53 @@
 import * as request from 'superagent';
 
-export interface Area {
+export const baseUrl = 'http://localhost:5000';
+
+let accessToken: string | undefined = '';
+export const setAccessToken = (token: string) => accessToken = token;
+
+export interface IArea {
   name: string;
   description?: string;
+  rooms?: IRoom[];
   id: number;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface AreaCreationRequest {
+export interface IRoom {
   name: string;
   description?: string;
-}
-
-export interface AreaUpdateRequest {
-  id: number;
-  name: string;
-  description?: string;
-}
-
-export interface Room {
-  name: string;
   areaId: number;
-  description?: string;
+  area?: IArea;
+  northRoom?: IRoom;
   northRoomId?: number;
+  eastRoom?: IRoom;
   eastRoomId?: number;
+  southRoom?: IRoom;
   southRoomId?: number;
+  westRoom?: IRoom;
   westRoomId?: number;
+  upRoom?: IRoom;
   upRoomId?: number;
+  downRoom?: IRoom;
   downRoomId?: number;
   id: number;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface RoomCreationRequest {
+export interface IAreaCreationRequest {
+  name: string;
+  description?: string;
+}
+
+export interface IAreaUpdateRequest {
+  id: number;
+  name: string;
+  description?: string;
+}
+
+export interface IRoomCreationRequest {
   areaId: number;
   name: string;
   description?: string;
@@ -46,7 +59,7 @@ export interface RoomCreationRequest {
   downRoomId?: number;
 }
 
-export interface RoomUpdateRequest {
+export interface IRoomUpdateRequest {
   id: number;
   areaId: number;
   name: string;
@@ -59,9 +72,11 @@ export interface RoomUpdateRequest {
   downRoomId?: number;
 }
 
-export interface User {
-  name?: string;
-  hashedPassword?: string;
+export interface IUser {
+  name: string;
+  hashedPassword: string;
+  currentRoomId?: number;
+  currentRoom?: IRoom;
   id: number;
   createdAt: Date;
   updatedAt: Date;
@@ -74,7 +89,7 @@ export interface IRequestParams {
   body?: Object;
 }
 
-const executeRequest = <T>(params: IRequestParams) => {
+const executeRequest = async <T>(params: IRequestParams) => {
   return new Promise<T>((resolve, reject) => {
     let req = request(params.method, `http://localhost:5000${params.url}`)
       .set('Content-Type', 'application/json');
@@ -82,8 +97,17 @@ const executeRequest = <T>(params: IRequestParams) => {
     if (params.queryParameters) { req = req.query(params.queryParameters); }
     if (params.body) { req.send(params.body); }
 
+    if (accessToken) {
+      req.set('Authorization', `Bearer ${accessToken}`);
+    }
+
     req.end((error: any, response: any) => {
       if (error || !response.ok) {
+        if (response && response.body && response.body.ExceptionMessage) {
+          reject(response.body.ExceptionMessage);
+          return;
+        }
+
         reject(error);
       } else {
         resolve(response.body);
@@ -97,11 +121,10 @@ export const ApiAreasGet = () => {
     method: 'GET',
     url: `/api/Areas`
   };
-  return executeRequest<Area[]>(requestParams);
+  return executeRequest<IArea[]>(requestParams);
 };
-
 export interface IApiAreasPostParams {
-  request: AreaCreationRequest;
+  request: IAreaCreationRequest;
 }
 
 export const ApiAreasPost = (params: IApiAreasPostParams) => {
@@ -110,11 +133,10 @@ export const ApiAreasPost = (params: IApiAreasPostParams) => {
     url: `/api/Areas`
   };
   requestParams.body = params.request;
-  return executeRequest<Area>(requestParams);
+  return executeRequest<IArea>(requestParams);
 };
-
 export interface IApiAreasPatchParams {
-  request: AreaUpdateRequest;
+  request: IAreaUpdateRequest;
 }
 
 export const ApiAreasPatch = (params: IApiAreasPatchParams) => {
@@ -123,9 +145,8 @@ export const ApiAreasPatch = (params: IApiAreasPatchParams) => {
     url: `/api/Areas`
   };
   requestParams.body = params.request;
-  return executeRequest<Area>(requestParams);
+  return executeRequest<IArea>(requestParams);
 };
-
 export interface IApiAreasByIdGetParams {
   id: number;
 }
@@ -135,9 +156,8 @@ export const ApiAreasByIdGet = (params: IApiAreasByIdGetParams) => {
     method: 'GET',
     url: `/api/Areas/${params.id}`
   };
-  return executeRequest<Area>(requestParams);
+  return executeRequest<IArea>(requestParams);
 };
-
 export interface IApiAreasByIdRoomsGetParams {
   id: number;
 }
@@ -147,11 +167,10 @@ export const ApiAreasByIdRoomsGet = (params: IApiAreasByIdRoomsGetParams) => {
     method: 'GET',
     url: `/api/Areas/${params.id}/rooms`
   };
-  return executeRequest<Room[]>(requestParams);
+  return executeRequest<IRoom[]>(requestParams);
 };
-
 export interface IApiRoomsPostParams {
-  request: RoomCreationRequest;
+  request: IRoomCreationRequest;
 }
 
 export const ApiRoomsPost = (params: IApiRoomsPostParams) => {
@@ -160,11 +179,10 @@ export const ApiRoomsPost = (params: IApiRoomsPostParams) => {
     url: `/api/Rooms`
   };
   requestParams.body = params.request;
-  return executeRequest<Room>(requestParams);
+  return executeRequest<IRoom>(requestParams);
 };
-
 export interface IApiRoomsPatchParams {
-  request: RoomUpdateRequest;
+  request: IRoomUpdateRequest;
 }
 
 export const ApiRoomsPatch = (params: IApiRoomsPatchParams) => {
@@ -173,17 +191,15 @@ export const ApiRoomsPatch = (params: IApiRoomsPatchParams) => {
     url: `/api/Rooms`
   };
   requestParams.body = params.request;
-  return executeRequest<Room>(requestParams);
+  return executeRequest<IRoom>(requestParams);
 };
-
 export const ApiUsersGet = () => {
   const requestParams: IRequestParams = {
     method: 'GET',
     url: `/api/Users`
   };
-  return executeRequest<User[]>(requestParams);
+  return executeRequest<IUser[]>(requestParams);
 };
-
 export interface IApiUsersByIdGetParams {
   id: number;
 }
@@ -193,6 +209,5 @@ export const ApiUsersByIdGet = (params: IApiUsersByIdGetParams) => {
     method: 'GET',
     url: `/api/Users/${params.id}`
   };
-  return executeRequest<User>(requestParams);
+  return executeRequest<IUser>(requestParams);
 };
-

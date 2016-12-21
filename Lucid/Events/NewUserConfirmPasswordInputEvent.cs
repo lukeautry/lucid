@@ -18,12 +18,12 @@ namespace Lucid.Events
 
 	public class NewUserConfirmPasswordInputEvent : BlockingEvent<NewUserConfirmPasswordInputEventData>
 	{
-		private readonly UserRepository _userRepository;
+		private readonly IUserRepository _userRepository;
 		public const string NonMatchingPasswordText = "Passwords must match.";
 
-		public NewUserConfirmPasswordInputEvent(IRedisProvider redisProvider, IDbConnection connection) : base("new-user-confirm-password-input-event", redisProvider)
+		public NewUserConfirmPasswordInputEvent(IRedisProvider redisProvider, IUserRepository userRepository) : base("new-user-confirm-password-input-event", redisProvider)
 		{
-			_userRepository = new UserRepository(RedisProvider, connection);
+			_userRepository = userRepository;
 		}
 
 		protected override async Task ExecuteBlockingEvent(NewUserConfirmPasswordInputEventData data)

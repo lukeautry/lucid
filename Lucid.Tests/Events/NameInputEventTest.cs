@@ -18,10 +18,14 @@ namespace Lucid.Tests.Events
 		public async Task ValidatesName(string name, string expectedErrorText)
 	    {
 			const string sessionId = "test-session";
-			var userRepository = new Mock<IUserRepository>();
-			var redisProvider = new TestRedisRepository();
+			var session = new SessionData(sessionId);
 
-			var evt = new NameInputEvent(userRepository.Object, redisProvider);
+			var redisProvider = new TestRedisRepository();
+			await new SessionService(redisProvider).Save(session);
+
+			var userRepository = new Mock<IUserRepository>();
+
+			var evt = new NameInputEvent(redisProvider, userRepository.Object);
 			await evt.Execute(new NameInputEventData(name, sessionId));
 
 			var userMessage = redisProvider.DequeueUserMessage(sessionId);
@@ -35,13 +39,13 @@ namespace Lucid.Tests.Events
 
 			var redisProvider = new TestRedisRepository();
 			await new SessionService(redisProvider).Save(session);
-			
-		    const string userName = "TestName";
+
+			const string userName = "TestName";
 			
 			var userRepository = new Mock<IUserRepository>();
 		    userRepository.Setup(u => u.GetByName(userName)).ReturnsAsync(new User { Name = userName, Id = 1 });
 
-			var evt = new NameInputEvent(userRepository.Object, redisProvider);
+			var evt = new NameInputEvent(redisProvider, userRepository.Object);
 			await evt.Execute(new NameInputEventData(userName, session.Id));
 
 			var updatedSession = await new SessionService(redisProvider).Get(session.Id);
@@ -65,7 +69,7 @@ namespace Lucid.Tests.Events
 			var userRepository = new Mock<IUserRepository>();
 			userRepository.Setup(u => u.GetByName(userName)).ReturnsAsync(null);
 
-			var evt = new NameInputEvent(userRepository.Object, redisProvider);
+			var evt = new NameInputEvent(redisProvider, userRepository.Object);
 			await evt.Execute(new NameInputEventData(userName, session.Id));
 
 			var updatedSession = await new SessionService(redisProvider).Get(session.Id);

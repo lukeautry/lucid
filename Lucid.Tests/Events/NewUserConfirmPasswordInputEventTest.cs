@@ -1,8 +1,10 @@
 ﻿using System.Threading.Tasks;
-using Lucid.Tests.Fixtures;
 using Xunit;
 using Lucid.Core;
+using Lucid.Database;
 using Lucid.Events;
+using Moq;
+using Context = Lucid.Tests.Fixtures.Context;
 
 namespace Lucid.Tests.Events
 {
@@ -22,7 +24,8 @@ namespace Lucid.Tests.Events
 		{
 			var session = await _context.GetSession();
 
-		    var evt = new NewUserConfirmPasswordInputEvent(_context.RedisProvider);
+			var userRepository = new Mock<IUserRepository>();
+			var evt = new NewUserConfirmPasswordInputEvent(_context.RedisProvider, userRepository.Object);
 		    await evt.Execute(new NewUserConfirmPasswordInputEventData(session.Id, "non-matching-test1234"));
 
 		    var nextMessage = _context.GetNextMessage();

@@ -1,4 +1,4 @@
-import { Room } from '../../../../../api/api';
+import { IRoom } from '../../../../../api/api';
 import { Direction } from '../view-area';
 
 export interface IMap {
@@ -18,7 +18,7 @@ export interface IRow {
 
 export interface ICell {
   index: number;
-  room?: Room;
+  room?: IRoom;
   parent: IRow;
   hasEastExit: boolean;
   hasWestExit: boolean;
@@ -26,13 +26,13 @@ export interface ICell {
   hasSouthExit: boolean;
 }
 
-export const buildMap = (rooms: Room[]): IMap => {
+export const buildMap = (rooms: IRoom[]): IMap => {
   const rows = new Array<IRow>();
   // For now, just one level
   const levels: ILevel[] = [{ index: 0, rows }];
 
   const placedCells: { [id: number]: ICell } = {};
-  const roomMap: { [id: number]: Room } = {};
+  const roomMap: { [id: number]: IRoom } = {};
   const processingMap: { [id: number]: boolean } = {};
   const linkMap: { [id: number]: { [direction: string]: number[] } } = {};
   const registerLink = (linkedId: number, linkingId: number, direction: Direction) => {
@@ -61,7 +61,7 @@ export const buildMap = (rooms: Room[]): IMap => {
     return row.cells.find(c => c.index === x);
   };
 
-  const buildCell = (index: number, parent: IRow, room?: Room) => {
+  const buildCell = (index: number, parent: IRow, room?: IRoom) => {
     return {
       index,
       parent,
@@ -100,7 +100,7 @@ export const buildMap = (rooms: Room[]): IMap => {
     return placedCells[roomId];
   };
 
-  const processEast = (room: Room) => {
+  const processEast = (room: IRoom) => {
     return processLinks(room.id, 'east', cell => {
       const existingCell = findCellByCoordinates(cell.index + 1, cell.parent.index, 0);
       if (existingCell) { throw new Error('There\'s already a cell here.'); }
@@ -113,7 +113,7 @@ export const buildMap = (rooms: Room[]): IMap => {
     });
   };
 
-  const processWest = (room: Room) => {
+  const processWest = (room: IRoom) => {
     return processLinks(room.id, 'west', cell => {
       const existingCell = findCellByCoordinates(cell.index - 1, cell.parent.index, 0);
       if (existingCell) { throw new Error('There\'s already a cell here.'); }
@@ -126,7 +126,7 @@ export const buildMap = (rooms: Room[]): IMap => {
     });
   };
 
-  const processNorth = (room: Room) => {
+  const processNorth = (room: IRoom) => {
     return processLinks(room.id, 'north', cell => {
       const existingCell = findCellByCoordinates(cell.index, cell.parent.index - 1, 0);
       if (existingCell) { throw new Error('There\'s already a cell here.'); }
@@ -145,7 +145,7 @@ export const buildMap = (rooms: Room[]): IMap => {
     });
   };
 
-  const processSouth = (room: Room) => {
+  const processSouth = (room: IRoom) => {
     return processLinks(room.id, 'south', cell => {
       const existingCell = findCellByCoordinates(cell.index, cell.parent.index + 1, 0);
       if (existingCell) {
@@ -166,7 +166,7 @@ export const buildMap = (rooms: Room[]): IMap => {
     });
   };
 
-  const placeRoom = (room: Room) => {
+  const placeRoom = (room: IRoom) => {
     if (placedCells[room.id]) { return; }
 
     const linkedCell = processEast(room) || processWest(room) || processNorth(room) || processSouth(room);

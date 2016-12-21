@@ -7,7 +7,13 @@ using Lucid.Core;
 
 namespace Lucid.Database
 {
-	public class UserRepository : Repository<User>
+	public interface IUserRepository : IRepository<User>
+	{
+		Task<User> GetByName(string name);
+		Task<User> Create(User model);
+	}
+
+	public class UserRepository : Repository<User>, IUserRepository
 	{
 		public override string TableName => "users";
 

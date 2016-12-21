@@ -1,5 +1,5 @@
 import { FormsyText } from 'formsy-material-ui';
-import { Area, ApiAreasPost } from '../../../../api/api';
+import { IArea, ApiAreasPost } from '../../../../api/api';
 import { observable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as Formsy from 'formsy-react';
@@ -10,7 +10,7 @@ import FlatButton from 'material-ui/FlatButton';
 export interface IAddAreaProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (area: Area) => void;
+  onSave: (area: IArea) => void;
 }
 
 @observer

@@ -2,6 +2,7 @@ using System;
 using System.Data;
 using System.Threading.Tasks;
 using Lucid.Core;
+using Lucid.Database;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 
@@ -20,6 +21,11 @@ namespace Lucid
 
 				return connection;
 			});
+
+			// TODO: This could probably be done dynamically
+			services.AddTransient<IUserRepository, UserRepository>();
+			services.AddTransient<IRoomRepository, RoomRepository>();
+			services.AddTransient<IAreaRepository, AreaRepository>();
 
 			var serviceProvider = services.BuildServiceProvider();
 

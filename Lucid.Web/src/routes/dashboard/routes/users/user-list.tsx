@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { User } from '../../../../api/api';
+import { IUser } from '../../../../api/api';
 import { Table, TableBody, TableHeader, TableHeaderColumn, TableRow, TableRowColumn } from 'material-ui/Table';
 import FloatingActionButton from 'material-ui/FloatingActionButton';
 import ContentAdd from 'material-ui/svg-icons/content/add';
 
 export interface IUserListProps {
-  users: User[];
+  users: IUser[];
 }
 
 export const UserList = (props: IUserListProps) => (

@@ -16,12 +16,12 @@ module.exports = {
     loaders: [
       {
         test: /\.tsx?$/,
-        loader: 'ts'
+        loader: 'ts-loader'
       },
       {
         test: /\.scss$/,
         loader: ExtractTextPlugin.extract({
-          loader: ['css', 'sass']
+          loader: ['css-loader', 'sass-loader']
         })
       }
     ]

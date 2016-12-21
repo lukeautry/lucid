@@ -12,34 +12,34 @@ namespace Lucid.Core
 
 	public sealed class UserMessageQueue
 	{
-	    private readonly IRedisProvider _redisProvider;
+		private readonly IRedisProvider _redisProvider;
 
-	    public UserMessageQueue(IRedisProvider redisProvider)
-	    {
+		public UserMessageQueue(IRedisProvider redisProvider)
+		{
 			_redisProvider = redisProvider;
-	    }
+		}
 
-	    public async Task Enqueue(string sessionId, Func<UserMessageBuilder, UserMessageBuilder> messageBuilderFunction)
-	    {
-		    var messageBuilder = new UserMessageBuilder();
-		    var content = messageBuilderFunction(messageBuilder).GetContent();
+		public async Task Enqueue(string sessionId, Func<UserMessageBuilder, UserMessageBuilder> messageBuilderFunction)
+		{
+			var messageBuilder = new UserMessageBuilder();
+			var content = messageBuilderFunction(messageBuilder).GetContent();
 
-		    await _redisProvider.Publish(GetKey(sessionId), new UserMessageData { Content = content });
-	    }
+			await _redisProvider.Publish(GetKey(sessionId), new UserMessageData { Content = content });
+		}
 
-	    public async Task Start(string sessionId, ISocketService socketService)
-	    {
-		    await _redisProvider.Subscribe<UserMessageData>(GetKey(sessionId), data =>
-		    {
+		public async Task Start(string sessionId, ISocketService socketService)
+		{
+			await _redisProvider.Subscribe<UserMessageData>(GetKey(sessionId), data =>
+			{
 				socketService.Send(data.Content);
-		    });
-	    }
+			});
+		}
 
 		public static string GetKey(string sessionId)
 		{
 			return $"user-messages:{sessionId}";
 		}
-    }
+	}
 
 	public sealed class UserMessageBuilder
 	{

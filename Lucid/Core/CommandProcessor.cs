@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Data;
 using System.Threading.Tasks;
 using Lucid.Commands;
+using Lucid.Database;
 using Lucid.Events;
 
 namespace Lucid.Core
@@ -9,14 +9,16 @@ namespace Lucid.Core
     public class CommandProcessor
     {
 	    private readonly IRedisProvider _redisProvider;
-	    private readonly IDbConnection _connection;
 	    private readonly IServiceProvider _serviceProvider;
+	    private readonly IUserRepository _userRepository;
+	    private readonly IRoomRepository _roomRepository;
 
-	    public CommandProcessor(IRedisProvider redisProvider, IDbConnection connection, IServiceProvider serviceProvider)
+	    public CommandProcessor(IRedisProvider redisProvider, IServiceProvider serviceProvider, IUserRepository userRepository, IRoomRepository roomRepository)
 	    {
 		    _redisProvider = redisProvider;
-			_connection = connection;
 		    _serviceProvider = serviceProvider;
+		    _userRepository = userRepository;
+			_roomRepository = roomRepository;
 	    }
 
 	    public async Task Process(string sessionId, string command)
@@ -24,7 +26,7 @@ namespace Lucid.Core
 			var session = await new SessionService(_redisProvider).Get(sessionId);
 			if (session.NameInputPending)
 			{
-				await new NameInputEvent(_redisProvider, _connection).Enqueue(new NameInputEventData(command, sessionId));
+				await new NameInputEvent(_redisProvider, _userRepository).Enqueue(new NameInputEventData(command, sessionId));
 				return;
 			}
 
@@ -61,7 +63,7 @@ namespace Lucid.Core
 
 		    if (session.CreationData.ConfirmPasswordInputPending)
 		    {
-			    await new NewUserConfirmPasswordInputEvent(_redisProvider, _connection).Enqueue(new NewUserConfirmPasswordInputEventData(session.Id, command));
+			    await new NewUserConfirmPasswordInputEvent(_redisProvider, _userRepository).Enqueue(new NewUserConfirmPasswordInputEventData(session.Id, command));
 				return true;
 		    }
 
@@ -72,7 +74,7 @@ namespace Lucid.Core
 	    {
 		    if (session.LoginData.PasswordInputPending)
 		    {
-			    await new ExistingUserPasswordInputEvent(_redisProvider, _connection).Enqueue(new ExistingUserPasswordInputEventData(session.Id, session.LoginData.UserId, command));
+			    await new ExistingUserPasswordInputEvent(_redisProvider, _userRepository, _roomRepository).Enqueue(new ExistingUserPasswordInputEventData(session.Id, session.LoginData.UserId, command));
 			    return true;
 		    }
 

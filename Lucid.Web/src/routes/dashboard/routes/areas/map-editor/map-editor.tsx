@@ -1,21 +1,21 @@
 import './map-editor.scss';
 import { buildMap, ICell } from './build-map';
-import { Area, Room } from '../../../../../api/api';
+import { IArea, IRoom } from '../../../../../api/api';
 import * as React from 'react';
 import Paper from 'material-ui/Paper';
 import RaisedButton from 'material-ui/RaisedButton';
 import { Direction } from '../view-area';
 
 export interface IMapEditorProps {
-  area: Area;
-  rooms: Room[];
+  area: IArea;
+  rooms: IRoom[];
   addNewRoom: () => void;
-  addConnectingRoom: (callback: (newRoomId: number) => Room) => any;
-  updateRoom: (room: Room) => void;
-  editNewRoom: (room: Room) => any;
+  addConnectingRoom: (callback: (newRoomId: number) => IRoom) => any;
+  updateRoom: (room: IRoom) => void;
+  editNewRoom: (room: IRoom) => any;
 }
 
-const directionAugmenters: { [direction: string]: (room: Room, newRoomId: number) => any } = {
+const directionAugmenters: { [direction: string]: (room: IRoom, newRoomId: number) => any } = {
   'east': (r, newRoomId) => r.eastRoomId = newRoomId,
   'south': (r, newRoomId) => r.southRoomId = newRoomId,
   'west': (r, newRoomId) => r.westRoomId = newRoomId,
@@ -47,21 +47,21 @@ export const MapEditor = (props: IMapEditorProps) => {
   const directionHandler = (cell: ICell, direction: Direction) => () => {
     const adjacentCell = adjacentCellMap[direction](cell);
     if (adjacentCell && adjacentCell.room) {
-      const clone = Object.assign({}, cell.room) as Room;
+      const clone = Object.assign({}, cell.room) as IRoom;
       directionAugmenters[direction](clone, adjacentCell.room.id);
       props.updateRoom(clone);
       return;
     }
 
     props.addConnectingRoom(newRoomId => {
-      const clone = Object.assign({}, cell.room) as Room;
+      const clone = Object.assign({}, cell.room) as IRoom;
       directionAugmenters[direction](clone, newRoomId);
 
       return clone;
     });
   };
 
-  const editRoomHandler = (room: Room) => () => props.editNewRoom(room);
+  const editRoomHandler = (room: IRoom) => () => props.editNewRoom(room);
 
   return (
     <div className='map-editor'>

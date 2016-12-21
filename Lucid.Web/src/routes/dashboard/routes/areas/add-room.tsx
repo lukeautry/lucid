@@ -1,5 +1,5 @@
 import { FormsyText } from 'formsy-material-ui';
-import { Room, ApiRoomsPost } from '../../../../api/api';
+import { IRoom, ApiRoomsPost } from '../../../../api/api';
 import { observable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as Formsy from 'formsy-react';
@@ -10,7 +10,7 @@ import FlatButton from 'material-ui/FlatButton';
 export interface IAddRoomProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (room: Room) => void;
+  onSave: (room: IRoom) => void;
   areaId: number;
 }
 

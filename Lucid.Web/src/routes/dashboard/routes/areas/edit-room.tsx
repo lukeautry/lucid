@@ -1,5 +1,5 @@
 import { FormsyText } from 'formsy-material-ui';
-import { Room, RoomUpdateRequest, ApiRoomsPatch } from '../../../../api/api';
+import { IRoom, IRoomUpdateRequest, ApiRoomsPatch } from '../../../../api/api';
 import { observable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as Formsy from 'formsy-react';
@@ -8,10 +8,10 @@ import Dialog from 'material-ui/Dialog';
 import FlatButton from 'material-ui/FlatButton';
 
 export interface IEditRoomProps {
-  room: Room;
+  room: IRoom;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (room: Room) => void;
+  onSave: (room: IRoom) => void;
 }
 
 @observer
@@ -66,7 +66,7 @@ export class EditRoom extends React.Component<IEditRoomProps, {}> {
 
   protected onSubmit = () => {
     this.inProgress = true;
-    const clonedRoom = Object.assign({}, this.props.room) as RoomUpdateRequest;
+    const clonedRoom = Object.assign({}, this.props.room) as IRoomUpdateRequest;
     clonedRoom.name = this.name || this.props.room.name;
     clonedRoom.description = this.description || this.props.room.description;
 

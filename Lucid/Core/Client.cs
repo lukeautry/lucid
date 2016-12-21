@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using Lucid.Database;
 using Lucid.Events;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,14 +14,16 @@ namespace Lucid.Core
 	{
 		private readonly TcpClient _tcpClient;
 		private readonly IRedisProvider _redisProvider;
-		private readonly IDbConnection _connection;
 		private readonly IServiceProvider _serviceProvider;
+		private readonly IUserRepository _userRepository;
+		private readonly IRoomRepository _roomRepository;
 
 		public Client(TcpClient tcpClient, IServiceProvider serviceProvider)
 		{
 			_tcpClient = tcpClient;
 			_redisProvider = serviceProvider.GetRequiredService<IRedisProvider>();
-			_connection = serviceProvider.GetRequiredService<IDbConnection>();
+			_userRepository = serviceProvider.GetRequiredService<IUserRepository>();
+			_roomRepository = serviceProvider.GetRequiredService<IRoomRepository>();
 			_serviceProvider = serviceProvider;
 		}
 
@@ -54,7 +57,7 @@ namespace Lucid.Core
 					var command = new string(commandSequence);
 					if (!string.IsNullOrEmpty(command))
 					{
-						await new CommandProcessor(_redisProvider, _connection, _serviceProvider).Process(session.Id, command);
+						await new CommandProcessor(_redisProvider, _serviceProvider, _userRepository, _roomRepository).Process(session.Id, command);
 						await CommandPendingCleared(session.Id);
 					}
 
