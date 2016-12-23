@@ -29,7 +29,8 @@ namespace Lucid.Core
 		public async Task Start()
 		{
 			var socketService = new SocketService(_tcpClient);
-			var session = await new SessionService(_redisProvider).Initialize();
+			var sessionService = new SessionService(_redisProvider);
+			var session = await sessionService.Initialize();
 			await new ConnectEvent(_redisProvider).Enqueue(new ConnectEventData(session.Id));
 			await new UserMessageQueue(_redisProvider).Start(session.Id, socketService);
 
@@ -56,6 +57,12 @@ namespace Lucid.Core
 					var command = new string(commandSequence);
 					if (!string.IsNullOrEmpty(command))
 					{
+						if (IsQuitCommand(command)) {
+							await sessionService.Evict(session.Id);
+							_tcpClient.Dispose();
+							break;
+						}
+
 						await new CommandProcessor(_redisProvider, _serviceProvider, _userRepository, _roomRepository).Process(session.Id, command);
 						await CommandPendingCleared(session.Id);
 					}
@@ -73,7 +80,13 @@ namespace Lucid.Core
 			}
 		}
 
-		public async Task CommandPendingCleared(string sessionId)
+        private static bool IsQuitCommand(string command)
+        {
+			var validQuitCommands = new string[]{ "quit", "exit" };
+			return validQuitCommands.Contains(command);
+        }
+
+        public async Task CommandPendingCleared(string sessionId)
 		{
 			while (true)
 			{

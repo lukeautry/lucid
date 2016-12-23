@@ -50,7 +50,7 @@ namespace Lucid.Core
 				return;
 		    }
 
-			// Say that we don't recognize the command
+			await new CommandUnrecognizedEvent(_redisProvider).Enqueue(new CommandUnrecognizedEventData(sessionId));
 	    }
 
 	    private async Task<bool> ProcessCreationFlow(string command, SessionData session)

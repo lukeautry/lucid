@@ -17,7 +17,7 @@ namespace Lucid.Core
 		{
 			Id = id;
 		}
-	}
+    }
 
 	public class LoginData
 	{
@@ -73,5 +73,10 @@ namespace Lucid.Core
 		{
 			return await _redisProvider.HashGetDictionary<SessionData>(SessionKey);
 		}
-	}
+
+        public async Task Evict(string sessionId)
+        {
+			await _redisProvider.HashDelete(SessionKey, sessionId);
+        }
+    }
 }
