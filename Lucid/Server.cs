@@ -30,7 +30,7 @@ namespace Lucid
 
 			var serviceProvider = services.BuildServiceProvider();
 
-			CommandMap.Initialize(serviceProvider);			
+			CommandMap.Initialize(serviceProvider);
 			StartEventQueue(serviceProvider);
 			StartListener(serviceProvider);
 		}

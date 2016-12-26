@@ -25,7 +25,8 @@ namespace Lucid.Tests.Events
 			var session = await _context.GetSession();
 
 			var userRepository = new Mock<IUserRepository>();
-			var evt = new NewUserConfirmPasswordInputEvent(_context.RedisProvider, userRepository.Object);
+			var roomRepository = new Mock<IRoomRepository>();
+			var evt = new NewUserConfirmPasswordInputEvent(_context.RedisProvider, userRepository.Object, roomRepository.Object);
 		    await evt.Execute(new NewUserConfirmPasswordInputEventData(session.Id, "non-matching-test1234"));
 
 		    var nextMessage = _context.GetNextMessage();

@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using Lucid.Broadcasts;
 using Lucid.Core;
@@ -32,7 +31,7 @@ namespace Lucid.Commands
 
             if (arguments.Length == 0 || string.IsNullOrWhiteSpace(message))
             {
-                await userMessageQueue.Enqueue(sessionId, b => b.Add("Say what, exactly?"));
+                await userMessageQueue.Enqueue(sessionId, b => b.Add("Say what, exactly?").Break());
                 return;
             }
 
@@ -44,7 +43,8 @@ namespace Lucid.Commands
             var user = await sessionUserService.GetCurrentUser(sessionId);
             var room = await sessionUserService.GetCurrentRoom(sessionId);
 
-            await new RoomBroadcast(RedisProvider, _userRepository, _roomRepository).Broadcast(room.Id, $"{user.Name} says, '{message}'.");
+            await new RoomBroadcast(RedisProvider, _userRepository, _roomRepository)
+				.Broadcast(room.Id, $"{user.Name} says, '{message}'", u => u.User.Id != user.Id);
         }
     }
 }

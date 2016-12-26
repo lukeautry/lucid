@@ -43,6 +43,11 @@ namespace Lucid.Tests
 			await SetString(key, serializedData);
 		}
 
+		public async Task SubscribeVoid(string key, Action onPublish)
+		{
+
+		}
+
 		public async Task SubscribeString(string key, Action<string> onPublish)
 		{
 
@@ -65,6 +70,11 @@ namespace Lucid.Tests
 
 			var content = typeof (T) == typeof (string) ? data as string : JsonConvert.SerializeObject(data);
 			queue.Enqueue(content);
+		}
+
+		public async Task PublishVoid(string key)
+		{
+
 		}
 
 		public async Task HashSet<T>(string hashKey, string key, T value)
