@@ -1,6 +1,7 @@
 using System;
 using System.Data;
 using System.Threading.Tasks;
+using Lucid.Commands;
 using Lucid.Core;
 using Lucid.Database;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +30,7 @@ namespace Lucid
 
 			var serviceProvider = services.BuildServiceProvider();
 
+			CommandMap.Initialize(serviceProvider);			
 			StartEventQueue(serviceProvider);
 			StartListener(serviceProvider);
 		}

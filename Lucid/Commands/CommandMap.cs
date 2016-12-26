@@ -10,14 +10,13 @@ namespace Lucid.Commands
 	public class CommandMap
 	{
 		private static IReadOnlyDictionary<string, Command> _commandMap;
-		private readonly IServiceProvider _serviceProvider;
 
-		public CommandMap(IServiceProvider serviceProvider)
+		public static void Initialize(IServiceProvider serviceProvider)
 		{
-			_serviceProvider = serviceProvider;
+			_commandMap = BuildCommandMap(serviceProvider);
 		}
 
-		private IReadOnlyDictionary<string, Command> BuildCommandMap()
+		private static IReadOnlyDictionary<string, Command> BuildCommandMap(IServiceProvider serviceProvider)
 		{
 			var dictionary = new Dictionary<string, Command>();
 
@@ -38,23 +37,23 @@ namespace Lucid.Commands
 					return false;
 				})
 				.ToList()
-				.ForEach(t => RegisterCommand(t, dictionary));
+				.ForEach(t => RegisterCommand(t, dictionary, serviceProvider));
 
 			return dictionary;
 		}
 
-		public Command Find(string command)
+		public static Command Find(string command)
 		{
-			var map = _commandMap ?? (_commandMap = BuildCommandMap());
+			var map = _commandMap;
 			Command cmd;
 			map.TryGetValue(command, out cmd);
 
 			return cmd;
 		}
 
-		private void RegisterCommand(Type type, IDictionary<string, Command> dictionary)
+		private static void RegisterCommand(Type type, IDictionary<string, Command> dictionary, IServiceProvider serviceProvider)
 		{
-			var command = ActivatorUtilities.CreateInstance(_serviceProvider, type) as Command;
+			var command = ActivatorUtilities.CreateInstance(serviceProvider, type) as Command;
 
 			foreach (var key in command.Keys)
 			{

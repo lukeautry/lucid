@@ -35,8 +35,8 @@ namespace Lucid.Database
 		public async Task<User> Create(User user)
 		{
 			var createdUser = await Connection.QuerySingleAsync<User>(
-						$"insert into {TableName}(name, hashed_password, created_at, updated_at) values (@Name, @HashedPassword, @CreatedAt, @UpdatedAt) returning *",
-						new { user.Name, user.HashedPassword, user.CreatedAt, user.UpdatedAt });
+						$"insert into {TableName}(name, hashed_password, created_at, updated_at, current_room_id) values (@Name, @HashedPassword, @CreatedAt, @UpdatedAt, @CurrentRoomId) returning *",
+						new { user.Name, user.HashedPassword, user.CreatedAt, user.UpdatedAt, user.CurrentRoomId });
 
 			await CacheSet(GetNameCacheKey(createdUser.Name), createdUser);
 			await CacheSetById(createdUser);

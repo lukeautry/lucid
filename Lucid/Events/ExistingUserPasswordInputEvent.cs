@@ -3,72 +3,64 @@ using System.Threading.Tasks;
 using Lucid.Core;
 using Lucid.Database;
 using Lucid.Models;
+using Lucid.Commands;
 
 namespace Lucid.Events
 {
-	public class ExistingUserPasswordInputEventData : BlockingEventData
-	{
-		public readonly string Password;
-		public readonly int UserId;
+    public class ExistingUserPasswordInputEventData : BlockingEventData
+    {
+        public readonly string Password;
+        public readonly int UserId;
 
-		public ExistingUserPasswordInputEventData(string sessionId, int userId, string password) : base(sessionId)
-		{
-			UserId = userId;
-			Password = password;
-		}
-	}
+        public ExistingUserPasswordInputEventData(string sessionId, int userId, string password) : base(sessionId)
+        {
+            UserId = userId;
+            Password = password;
+        }
+    }
 
-	public class ExistingUserPasswordInputEvent : BlockingEvent<ExistingUserPasswordInputEventData>
-	{
-		private readonly IUserRepository _userRepository;
-		private readonly UserMessageQueue _userMessageQueue;
-		private readonly IRoomRepository _roomRepository;
+    public class ExistingUserPasswordInputEvent : BlockingEvent<ExistingUserPasswordInputEventData>
+    {
+        private readonly IUserRepository _userRepository;
+        private readonly UserMessageQueue _userMessageQueue;
+        private readonly IRoomRepository _roomRepository;
 
-		public ExistingUserPasswordInputEvent(
-			IRedisProvider redisProvider,
-			IUserRepository userRepository,
-			IRoomRepository roomRepository
-			) : base("existing-user-password-input", redisProvider)
-		{
-			_userRepository = userRepository;
-			_roomRepository = roomRepository;
-			_userMessageQueue = new UserMessageQueue(RedisProvider);
-		}
+        public ExistingUserPasswordInputEvent(
+            IRedisProvider redisProvider,
+            IUserRepository userRepository,
+            IRoomRepository roomRepository
+            ) : base("existing-user-password-input", redisProvider)
+        {
+            _userRepository = userRepository;
+            _roomRepository = roomRepository;
+            _userMessageQueue = new UserMessageQueue(RedisProvider);
+        }
 
-		protected override async Task ExecuteBlockingEvent(ExistingUserPasswordInputEventData data)
-		{
-			var user = await _userRepository.Get(data.UserId);
-			if (!PasswordValidation.VerifyPassword(data.Password, user.HashedPassword))
-			{
-				await _userMessageQueue.Enqueue(data.SessionId, b => b.Add("That password didn't match. Please try again."));
-				return;
-			}
+        protected override async Task ExecuteBlockingEvent(ExistingUserPasswordInputEventData data)
+        {
+            var user = await _userRepository.Get(data.UserId);
+            if (!PasswordValidation.VerifyPassword(data.Password, user.HashedPassword))
+            {
+                await _userMessageQueue.Enqueue(data.SessionId, b => b.Add("That password didn't match. Please try again."));
+                return;
+            }
 
-			await new SessionService(RedisProvider).Update(data.SessionId, s =>
-			{
-				s.LoginData = null;
-				s.UserId = user.Id;
-			});
+            var sessionService = new SessionService(RedisProvider);
 
-			await ShowCurrentRoom(data.SessionId, user);
-		}
+            var existingUserSession = await sessionService.GetSessionByUserId(user.Id);
+            if (existingUserSession != null)
+            {
+                await sessionService.Evict(existingUserSession.Id);
+				await _userMessageQueue.Enqueue(data.SessionId, b => b.Add("Reconnecting..."));
+            }
 
-		private async Task ShowCurrentRoom(string sessionId, User user)
-		{
-			if (!user.CurrentRoomId.HasValue)
-			{
-				Console.WriteLine("Handle if user has no current room ID");
-				return;
-			}
+            await new SessionService(RedisProvider).Update(data.SessionId, s =>
+            {
+                s.LoginData = null;
+                s.UserId = user.Id;
+            });
 
-			var room = await _roomRepository.Get(user.CurrentRoomId.Value);
-			if (room == null)
-			{
-				Console.WriteLine("Apparently this users CurrentRoomId is invalid.");
-				return;
-			}
-
-			await new Views.Room(RedisProvider, room).Render(sessionId);
-		}
-	}
+            await Look.ShowCurrentRoom(_userRepository, _roomRepository, RedisProvider, data.SessionId);
+        }
+    }
 }

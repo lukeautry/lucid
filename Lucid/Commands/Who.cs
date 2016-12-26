@@ -8,33 +8,38 @@ using Lucid.Views;
 
 namespace Lucid.Commands
 {
-	public class Who : Command
-	{
-		private readonly IUserRepository _userRepository;
+    public class Who : Command
+    {
+        private readonly IUserRepository _userRepository;
 
-		public Who(IRedisProvider redisProvider, IUserRepository userRepository) : base(new[] { "wh", "who" }, redisProvider)
-		{
-			_userRepository = userRepository;
-		}
+        public Who(IRedisProvider redisProvider, IUserRepository userRepository) : base(new[] { "wh", "who" }, redisProvider)
+        {
+            _userRepository = userRepository;
+        }
 
-		public override async Task Process(string sessionId)
-		{
-			var sessions = await new SessionService(RedisProvider).GetSessions();
+        public override CommandMetadata GetCommandMetadata()
+        {
+            return new CommandMetadata("Who", "Get a list of other players on the server", Keys, new CommandArgument[] { });
+        }
 
-			var users = new List<User>();
+        public override async Task Process(string sessionId, string[] arguments)
+        {
+            var sessions = await new SessionService(RedisProvider).GetSessions();
 
-			foreach (var session in sessions)
-			{
-				if (session.Key.Equals(sessionId, StringComparison.OrdinalIgnoreCase)) { continue; }
+            var users = new List<User>();
 
-				var sessionData = session.Value;
-				if (!sessionData.UserId.HasValue) { continue; }
+            foreach (var session in sessions)
+            {
+                if (session.Key.Equals(sessionId, StringComparison.OrdinalIgnoreCase)) { continue; }
 
-				var user = await _userRepository.Get(sessionData.UserId.Value);
-				users.Add(user);
-			}
+                var sessionData = session.Value;
+                if (!sessionData.UserId.HasValue) { continue; }
 
-			await new PlayerList(RedisProvider, users.ToArray()).Render(sessionId);
-		}
-	}
+                var user = await _userRepository.Get(sessionData.UserId.Value);
+                users.Add(user);
+            }
+
+            await new PlayerList(RedisProvider, users.ToArray()).Render(sessionId);
+        }
+    }
 }

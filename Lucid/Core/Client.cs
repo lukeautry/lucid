@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using Lucid.Commands;
 using Lucid.Database;
 using Lucid.Events;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,7 +14,6 @@ namespace Lucid.Core
 	{
 		private readonly TcpClient _tcpClient;
 		private readonly IRedisProvider _redisProvider;
-		private readonly IServiceProvider _serviceProvider;
 		private readonly IUserRepository _userRepository;
 		private readonly IRoomRepository _roomRepository;
 
@@ -23,7 +23,6 @@ namespace Lucid.Core
 			_redisProvider = serviceProvider.GetRequiredService<IRedisProvider>();
 			_userRepository = serviceProvider.GetRequiredService<IUserRepository>();
 			_roomRepository = serviceProvider.GetRequiredService<IRoomRepository>();
-			_serviceProvider = serviceProvider;
 		}
 
 		public async Task Start()
@@ -33,6 +32,7 @@ namespace Lucid.Core
 			var session = await sessionService.Initialize();
 			await new ConnectEvent(_redisProvider).Enqueue(new ConnectEventData(session.Id));
 			await new UserMessageQueue(_redisProvider).Start(session.Id, socketService);
+			await sessionService.OnEviction(session.Id, () => _tcpClient.Dispose());
 
 			var pendingBuffer = ImmutableArray.Create<byte>();
 			while (true)
@@ -57,13 +57,7 @@ namespace Lucid.Core
 					var command = new string(commandSequence);
 					if (!string.IsNullOrEmpty(command))
 					{
-						if (IsQuitCommand(command)) {
-							await sessionService.Evict(session.Id);
-							_tcpClient.Dispose();
-							break;
-						}
-
-						await new CommandProcessor(_redisProvider, _serviceProvider, _userRepository, _roomRepository).Process(session.Id, command);
+						await new CommandProcessor(_redisProvider, _userRepository, _roomRepository).Process(session.Id, command);
 						await CommandPendingCleared(session.Id);
 					}
 
