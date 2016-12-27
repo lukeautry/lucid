@@ -1,8 +1,6 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Lucid.Core;
 using Lucid.Database;
-using Lucid.Models;
 using Lucid.Commands;
 
 namespace Lucid.Events

@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Lucid.Core;
 using Lucid.Database;
-using Lucid.Models;
 using Lucid.Services;
 
 namespace Lucid.Broadcasts

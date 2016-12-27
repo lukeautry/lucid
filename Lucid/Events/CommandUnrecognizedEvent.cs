@@ -20,7 +20,7 @@ namespace Lucid.Events
 		public override async Task Execute(CommandUnrecognizedEventData data)
 		{
 			var userMessageQueue = new UserMessageQueue(RedisProvider);
-			await userMessageQueue.Enqueue(data.SessionId, b => b.Add("Sorry, that command isn't recognized.").Break());
+			await userMessageQueue.Enqueue(data.SessionId, b => b.Break().Add("Sorry, that command isn't recognized."));
 		}
 	}
 }

@@ -12,22 +12,19 @@ namespace Lucid.Views
 			_users = users;
 		}
 
-		protected override Func<UserMessageBuilder, UserMessageBuilder> Compile()
+		public override UserMessageBuilder Compile(UserMessageBuilder builder)
 		{
-			return builder =>
-			{
-				builder
+			builder
 					.Break()
 					.Add("Players online:")
 					.Add("------------------------------");
 
-				foreach (var user in _users)
-				{
-					builder.Add(user.Name);
-				}
+			foreach (var user in _users)
+			{
+				builder.Add(user.Name);
+			}
 
-				return builder;
-			};
+			return builder;
 		}
 	}
 }

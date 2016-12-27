@@ -3,7 +3,6 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using Lucid.Commands;
 using Lucid.Database;
 using Lucid.Events;
 using Microsoft.Extensions.DependencyInjection;

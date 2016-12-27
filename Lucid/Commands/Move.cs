@@ -2,8 +2,10 @@
 using Lucid.Broadcasts;
 using Lucid.Core;
 using Lucid.Database;
-using Lucid.Models;
 using Lucid.Services;
+using Lucid.Views;
+using Room = Lucid.Models.Room;
+using System.Linq;
 
 namespace Lucid.Commands
 {
@@ -39,8 +41,7 @@ namespace Lucid.Commands
 			await roomBroadcast.Broadcast(destinationRoomId.Value, $"{user.Name} enters from the {ReverseDirection.ToLower()}.", u => u.User.Id != user.Id);
 			await roomBroadcast.Broadcast(currentRoom.Id, $"{user.Name} leaves to the {Direction.ToLower()}.", u => u.User.Id != user.Id);
 
-			var destinationRoom = await _roomRepository.Get(destinationRoomId.Value);
-			await new Views.Room(RedisProvider, destinationRoom).Render(sessionId);
+			await Look.ShowCurrentRoom(_userRepository, _roomRepository, RedisProvider, sessionId);
 		}
 
 		protected abstract int? GetDestinationRoomId(Room currentRoom);

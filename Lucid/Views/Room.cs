@@ -1,34 +1,50 @@
-﻿using System;
-using Lucid.Core;
+﻿using Lucid.Core;
+using Lucid.Models;
 
 namespace Lucid.Views
 {
 	public class Room : View
 	{
 		private readonly Models.Room _room;
+		private readonly User[] _users;
 
-		public Room(IRedisProvider redisProvider, Models.Room room) : base(redisProvider)
+		public Room(IRedisProvider redisProvider, RoomData roomData) : base(redisProvider)
 		{
-			_room = room;
+			_room = roomData.Room;
+			_users = roomData.Users;
 		}
 
-		protected override Func<UserMessageBuilder, UserMessageBuilder> Compile()
+		public override UserMessageBuilder Compile(UserMessageBuilder builder)
 		{
-			var exits = "Exits: ";
-			if (_room.NorthRoomId.HasValue) { exits += "north "; }
-			if (_room.EastRoomId.HasValue) { exits += "east "; }
-			if (_room.SouthRoomId.HasValue) { exits += "south "; }
-			if (_room.WestRoomId.HasValue) { exits += "west "; }
-			if (_room.UpRoomId.HasValue) { exits += "up "; }
-			if (_room.DownRoomId.HasValue) { exits += "down "; }
-
-			return builder => builder
+			builder
 				.Break()
 				.Add(_room.Name)
 				.Break()
 				.Add(_room.Description)
-				.Break()
-				.Add(exits);
+				.Break();
+
+			new Exits(RedisProvider, _room)
+				.Compile(builder)
+				.Break();
+
+			foreach (var user in _users)
+			{
+				builder.Add($"{user.Name} is standing here.");
+			}
+
+			return builder.Break();
+		}
+	}
+
+	public sealed class RoomData
+	{
+		public readonly Models.Room Room;
+		public readonly User[] Users;
+
+		public RoomData(Models.Room room, User[] users)
+		{
+			Room = room;
+			Users = users;
 		}
 	}
 }

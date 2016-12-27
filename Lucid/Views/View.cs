@@ -4,20 +4,20 @@ using Lucid.Core;
 
 namespace Lucid.Views
 {
-    public abstract class View
-    {
-	    private readonly IRedisProvider _redisProvider;
+	public abstract class View
+	{
+		protected readonly IRedisProvider RedisProvider;
 
-	    protected View(IRedisProvider redisProvider)
-	    {
-		    _redisProvider = redisProvider;
-	    }
+		protected View(IRedisProvider redisProvider)
+		{
+			RedisProvider = redisProvider;
+		}
 
 		public async Task Render(string sessionId)
 		{
-			await new UserMessageQueue(_redisProvider).Enqueue(sessionId, Compile());
+			await new UserMessageQueue(RedisProvider).Enqueue(sessionId, Compile);
 		}
 
-	    protected abstract Func<UserMessageBuilder, UserMessageBuilder> Compile();
-    }
+		public abstract UserMessageBuilder Compile(UserMessageBuilder builder);
+	}
 }

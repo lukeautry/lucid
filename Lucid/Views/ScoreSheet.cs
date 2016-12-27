@@ -1,22 +1,21 @@
-﻿using System;
-using Lucid.Core;
+﻿using Lucid.Core;
 
 namespace Lucid.Views
 {
-    public class ScoreSheet : View
-    {
-        private readonly Models.User _user;
+	public class ScoreSheet : View
+	{
+		private readonly Models.User _user;
 
-        public ScoreSheet(IRedisProvider redisProvider, Models.User user) : base(redisProvider)
-        {
-            _user = user;
-        }
+		public ScoreSheet(IRedisProvider redisProvider, Models.User user) : base(redisProvider)
+		{
+			_user = user;
+		}
 
-        protected override Func<UserMessageBuilder, UserMessageBuilder> Compile()
-        {
-            return builder => builder
-                    .Break()
-                    .Add($"Name: {_user.Name}");
-        }
-    }
+		public override UserMessageBuilder Compile(UserMessageBuilder builder)
+		{
+			return builder
+				.Break()
+				.Add($"Name: {_user.Name}");
+		}
+	}
 }
