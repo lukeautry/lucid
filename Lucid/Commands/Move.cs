@@ -3,45 +3,51 @@ using Lucid.Broadcasts;
 using Lucid.Core;
 using Lucid.Database;
 using Lucid.Services;
-using Lucid.Views;
 using Room = Lucid.Models.Room;
-using System.Linq;
 
 namespace Lucid.Commands
 {
 	public abstract class Move : Command
 	{
-		protected readonly IUserRepository _userRepository;
-		private readonly IRoomRepository _roomRepository;
+		private readonly ISessionUserService _sessionUserService;
+		private readonly IUserRepository _userRepository;
+		private readonly IRoomBroadcaster _roomBroadcaster;
+		private readonly IUserMessageQueue _userMessageQueue;
 
-		protected Move(string[] keys, IRedisProvider redisProvider, IUserRepository userRepository, IRoomRepository roomRepository) : base(keys, redisProvider)
+		protected Move(
+			string[] keys,
+			IRedisProvider redisProvider,
+			ISessionUserService sessionUserService,
+			IUserRepository userRepository,
+			IRoomBroadcaster roomBroadcaster,
+			IUserMessageQueue userMessageQueue
+			) : base(keys, redisProvider)
 		{
+			_sessionUserService = sessionUserService;
 			_userRepository = userRepository;
-			_roomRepository = roomRepository;
+			_roomBroadcaster = roomBroadcaster;
+			_userMessageQueue = userMessageQueue;
 		}
 
 		public override async Task Process(string sessionId, string[] arguments)
 		{
-			var sessionUserService = new SessionUserService(_userRepository, _roomRepository, RedisProvider);
-
-			var user = await sessionUserService.GetCurrentUser(sessionId);
-			var currentRoom = await sessionUserService.GetCurrentRoom(sessionId);
+			var user = await _sessionUserService.GetCurrentUser(sessionId);
+			var currentRoom = await _sessionUserService.GetCurrentRoom(sessionId);
 
 			var destinationRoomId = GetDestinationRoomId(currentRoom);
 			if (!destinationRoomId.HasValue)
 			{
-				await new UserMessageQueue(RedisProvider).Enqueue(sessionId, b => b.Add("You cannot go that way."));
+				await _userMessageQueue.Enqueue(sessionId, b => b.Add("You cannot go that way."));
 				return;
 			}
 
 			// TODO: Do things like check if there is some obstruction, if the room is full, etc
 			await _userRepository.Modify(user.Id, u => u.CurrentRoomId = destinationRoomId.Value);
 
-			var roomBroadcast = new RoomBroadcast(RedisProvider, _userRepository, _roomRepository);
-			await roomBroadcast.Broadcast(destinationRoomId.Value, $"{user.Name} enters from the {ReverseDirection.ToLower()}.", u => u.User.Id != user.Id);
-			await roomBroadcast.Broadcast(currentRoom.Id, $"{user.Name} leaves to the {Direction.ToLower()}.", u => u.User.Id != user.Id);
+			await _roomBroadcaster.Broadcast(destinationRoomId.Value, $"{user.Name} enters from the {ReverseDirection.ToLower()}.", u => u.User.Id != user.Id);
+			await _roomBroadcaster.Broadcast(currentRoom.Id, $"{user.Name} leaves to the {Direction.ToLower()}.", u => u.User.Id != user.Id);
 
-			await Look.ShowCurrentRoom(_userRepository, _roomRepository, RedisProvider, sessionId);
+			await Look.ShowCurrentRoom(RedisProvider, _sessionUserService, sessionId);
 		}
 
 		protected abstract int? GetDestinationRoomId(Room currentRoom);
@@ -51,7 +57,13 @@ namespace Lucid.Commands
 
 	public sealed class East : Move
 	{
-		public East(IRedisProvider redisProvider, IUserRepository userRepository, IRoomRepository roomRepository) : base(new[] { "e", "ea", "eas", "east" }, redisProvider, userRepository, roomRepository) { }
+		public East(
+			IRedisProvider redisProvider,
+			ISessionUserService sessionUserService,
+			IUserRepository userRepository,
+			IRoomBroadcaster roomBroadcaster,
+			IUserMessageQueue userMessageQueue
+			) : base(new[] { "e", "ea", "eas", "east" }, redisProvider, sessionUserService, userRepository, roomBroadcaster, userMessageQueue) { }
 
 		public override CommandMetadata GetCommandMetadata()
 		{
@@ -65,7 +77,13 @@ namespace Lucid.Commands
 
 	public sealed class South : Move
 	{
-		public South(IRedisProvider redisProvider, IUserRepository userRepository, IRoomRepository roomRepository) : base(new[] { "s", "so", "sou", "sout", "south" }, redisProvider, userRepository, roomRepository) { }
+		public South(
+			IRedisProvider redisProvider,
+			ISessionUserService sessionUserService,
+			IUserRepository userRepository,
+			IRoomBroadcaster roomBroadcaster,
+			IUserMessageQueue userMessageQueue
+			) : base(new[] { "s", "so", "sou", "sout", "south" }, redisProvider, sessionUserService, userRepository, roomBroadcaster, userMessageQueue) { }
 
 		public override CommandMetadata GetCommandMetadata()
 		{
@@ -79,7 +97,13 @@ namespace Lucid.Commands
 
 	public sealed class West : Move
 	{
-		public West(IRedisProvider redisProvider, IUserRepository userRepository, IRoomRepository roomRepository) : base(new[] { "w", "we", "wes", "west" }, redisProvider, userRepository, roomRepository) { }
+		public West(
+			IRedisProvider redisProvider,
+			ISessionUserService sessionUserService,
+			IUserRepository userRepository,
+			IRoomBroadcaster roomBroadcaster,
+			IUserMessageQueue userMessageQueue
+			) : base(new[] { "w", "we", "wes", "west" }, redisProvider, sessionUserService, userRepository, roomBroadcaster, userMessageQueue) { }
 
 		public override CommandMetadata GetCommandMetadata()
 		{
@@ -93,7 +117,13 @@ namespace Lucid.Commands
 
 	public sealed class North : Move
 	{
-		public North(IRedisProvider redisProvider, IUserRepository userRepository, IRoomRepository roomRepository) : base(new[] { "n", "no", "nor", "nort", "north" }, redisProvider, userRepository, roomRepository) { }
+		public North(
+			IRedisProvider redisProvider,
+			ISessionUserService sessionUserService,
+			IUserRepository userRepository,
+			IRoomBroadcaster roomBroadcaster,
+			IUserMessageQueue userMessageQueue
+			) : base(new[] { "n", "no", "nor", "nort", "north" }, redisProvider, sessionUserService, userRepository, roomBroadcaster, userMessageQueue) { }
 
 		public override CommandMetadata GetCommandMetadata()
 		{
@@ -107,7 +137,13 @@ namespace Lucid.Commands
 
 	public sealed class Up : Move
 	{
-		public Up(IRedisProvider redisProvider, IUserRepository userRepository, IRoomRepository roomRepository) : base(new[] { "u", "up" }, redisProvider, userRepository, roomRepository) { }
+		public Up(
+			IRedisProvider redisProvider,
+			ISessionUserService sessionUserService,
+			IUserRepository userRepository,
+			IRoomBroadcaster roomBroadcaster,
+			IUserMessageQueue userMessageQueue
+			) : base(new[] { "u", "up" }, redisProvider, sessionUserService, userRepository, roomBroadcaster, userMessageQueue) { }
 
 		public override CommandMetadata GetCommandMetadata()
 		{
@@ -121,7 +157,13 @@ namespace Lucid.Commands
 
 	public sealed class Down : Move
 	{
-		public Down(IRedisProvider redisProvider, IUserRepository userRepository, IRoomRepository roomRepository) : base(new[] { "d", "do", "dow", "down" }, redisProvider, userRepository, roomRepository) { }
+		public Down(
+			IRedisProvider redisProvider,
+			ISessionUserService sessionUserService,
+			IUserRepository userRepository,
+			IRoomBroadcaster roomBroadcaster,
+			IUserMessageQueue userMessageQueue
+			) : base(new[] { "d", "do", "dow", "down" }, redisProvider, sessionUserService, userRepository, roomBroadcaster, userMessageQueue) { }
 
 		public override CommandMetadata GetCommandMetadata()
 		{

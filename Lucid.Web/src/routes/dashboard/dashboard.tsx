@@ -8,6 +8,7 @@ import { fade } from 'material-ui/utils/colorManipulator';
 import { Link } from 'react-router';
 import { areasPath } from './routes/areas/areas';
 import { usersPath } from './routes/users/users';
+import { itemDefinitionsPath } from './routes/item-definitions/item-definitions';
 import { observable } from 'mobx';
 import { observer } from 'mobx-react';
 
@@ -51,6 +52,9 @@ export class Dashboard extends React.Component<IDashboardProps, {}> {
             <Link to={areasPath} activeClassName='active' onClick={this.onRequestChange}>
               <MenuItem className='menu-item' primaryText='Areas' />
             </Link>
+            <Link to={itemDefinitionsPath} onClick={this.onRequestChange}>
+              <MenuItem className='menu-item' primaryText='Item Definitions' />
+            </Link>
           </Drawer>
           {this.props.children}
         </div >
@@ -58,11 +62,6 @@ export class Dashboard extends React.Component<IDashboardProps, {}> {
     );
   }
 
-  private onMenuClick = () => {
-    this.drawerOpen = !this.drawerOpen;
-  };
-
-  private onRequestChange = () => {
-    this.drawerOpen = false;
-  };
+  private onMenuClick = () => this.drawerOpen = !this.drawerOpen;
+  private onRequestChange = () => this.drawerOpen = false;
 }

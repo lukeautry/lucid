@@ -1,21 +1,26 @@
 using System.Threading.Tasks;
-using Lucid.Broadcasts;
 using Lucid.Core;
-using Lucid.Database;
 using Lucid.Services;
 using System.Linq;
 
 namespace Lucid.Commands
 {
-	public class Gossip : Command
+	public sealed class Gossip : Command
 	{
-		private readonly IUserRepository _userRepository;
-		private readonly IRoomRepository _roomRepository;
+		private readonly ISessionUserService _sessionUserService;
+		private readonly IUserMessageQueue _userMessageQueue;
+		private readonly ISessionService _sessionService;
 
-		public Gossip(IRedisProvider redisProvider, IUserRepository userRepository, IRoomRepository roomRepository) : base(new[] { "go", "gos", "goss", "gossi", "gossip" }, redisProvider)
+		public Gossip(
+			IRedisProvider redisProvider, 
+			ISessionUserService sessionUserService, 
+			IUserMessageQueue userMessageQueue,
+			ISessionService sessionService
+			) : base(new[] { "go", "gos", "goss", "gossi", "gossip" }, redisProvider)
 		{
-			_userRepository = userRepository;
-			_roomRepository = roomRepository;
+			_sessionUserService = sessionUserService;
+			_userMessageQueue = userMessageQueue;
+			_sessionService = sessionService;
 		}
 
 		public override CommandMetadata GetCommandMetadata()
@@ -27,26 +32,25 @@ namespace Lucid.Commands
 
 		public override async Task Process(string sessionId, string[] arguments)
 		{
-			var userMessageQueue = new UserMessageQueue(RedisProvider);
 			var message = string.Join(" ", arguments);
 
 			if (arguments.Length == 0 || string.IsNullOrWhiteSpace(message))
 			{
-				await userMessageQueue.Enqueue(sessionId, b => b.Add("Gossip what, exactly?").Break());
+				await _userMessageQueue.Enqueue(sessionId, b => b.Add("Gossip what, exactly?").Break());
 				return;
 			}
 
-			await userMessageQueue.Enqueue(sessionId, b => b
+			await _userMessageQueue.Enqueue(sessionId, b => b
 				.Break()
 				.Add($"[gossip] You: '{message}'"));
 
-			var currentUser = await new SessionUserService(_userRepository, _roomRepository, RedisProvider).GetCurrentUser(sessionId);
-			var allSessions = await new SessionService(RedisProvider).GetSessions();
+			var currentUser = await _sessionUserService.GetCurrentUser(sessionId);
+			var allSessions = await _sessionService.GetSessions();
 
 			var sessions = allSessions.Where(s => s.Key != sessionId);
 			foreach (var session in sessions)
 			{
-				await userMessageQueue.Enqueue(session.Key, b => b
+				await _userMessageQueue.Enqueue(session.Key, b => b
 					.Break()
 					.Add($"[gossip] {currentUser.Name}: '{message}'"));
 			}

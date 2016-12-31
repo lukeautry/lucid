@@ -1,4 +1,46 @@
-﻿declare module 'formsy-react' {
+﻿declare namespace __MaterialUI {
+  interface TextFieldProps {
+    autoFocus?: boolean;
+    spellCheck?: boolean;
+    autoComplete?: 'off';
+    required?: boolean;
+    onTouchTap?: Function;
+    onClick?: Function;
+  }
+
+  interface TimePickerProps {
+    required?: boolean;
+  }
+
+  interface AutoCompleteProps {
+    autoFocus?: boolean;
+  }
+
+  interface SelectFieldProps {
+    onTouchTap?: Function;
+    onClick?: Function;
+  }
+
+  namespace List {
+    interface ListItemProps {
+      containerElement?: any;
+    }
+  }
+
+  namespace Switches {
+    interface CheckboxProps {
+      onTouchTap?: Function;
+    }
+  }
+
+  namespace Table {
+    interface TableRowColumnProps {
+      title?: string;
+    }
+  }
+}
+
+declare module 'formsy-react' {
   interface ValidationErrors {
     [key: string]: string;
   }
@@ -25,6 +67,10 @@
   class Form extends React.Component<FormProps, any> {
     submit(): void;
   }
+}
+
+interface EventTarget {
+  value: any;
 }
 
 declare module 'formsy-material-ui' {

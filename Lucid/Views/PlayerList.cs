@@ -1,5 +1,4 @@
-﻿using System;
-using Lucid.Core;
+﻿using Lucid.Core;
 
 namespace Lucid.Views
 {

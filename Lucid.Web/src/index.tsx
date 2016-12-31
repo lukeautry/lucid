@@ -4,6 +4,7 @@ import * as ReactDOM from 'react-dom';
 import { Dashboard } from './routes/dashboard/dashboard';
 import { Users, usersPath } from './routes/dashboard/routes/users/users';
 import { Areas, areasPath } from './routes/dashboard/routes/areas/areas';
+import { ItemDefinitions, itemDefinitionsPath } from './routes/dashboard/routes/item-definitions/item-definitions';
 import { ViewArea, viewAreaPath } from './routes/dashboard/routes/areas/view-area';
 import { Router, Route, IndexRoute, hashHistory } from 'react-router';
 import * as injectTapEventPlugin from 'react-tap-event-plugin';
@@ -18,6 +19,7 @@ ReactDOM.render((
         <IndexRoute component={Areas} />
         <Route path={viewAreaPath} component={ViewArea} />
       </Route>
+      <Route path={itemDefinitionsPath} component={ItemDefinitions} />
     </Route>
   </Router>
 ), document.getElementById('app'));

@@ -59,6 +59,8 @@ namespace Lucid.Api
 			services.AddScoped<IUserRepository, UserRepository>();
 			services.AddScoped<IAreaRepository, AreaRepository>();
 			services.AddScoped<IRoomRepository, RoomRepository>();
+	        services.AddScoped<IItemDefinitionRepository, ItemDefinitionRepository>();
+			services.AddScoped<IItemRepository, ItemRepository>();
 			services.AddSwaggerGen();
 		}
 
@@ -71,6 +73,7 @@ namespace Lucid.Api
             app.UseApplicationInsightsRequestTelemetry();
             app.UseApplicationInsightsExceptionTelemetry();
 			app.UseCors("CorsPolicy");
+	        app.UseMiddleware(typeof(ErrorHandlingMiddleware));
 			app.UseMvc();
 			app.UseSwagger();
         }

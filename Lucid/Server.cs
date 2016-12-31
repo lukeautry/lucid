@@ -1,9 +1,11 @@
 using System;
 using System.Data;
 using System.Threading.Tasks;
+using Lucid.Broadcasts;
 using Lucid.Commands;
 using Lucid.Core;
 using Lucid.Database;
+using Lucid.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 
@@ -27,6 +29,12 @@ namespace Lucid
 			services.AddTransient<IUserRepository, UserRepository>();
 			services.AddTransient<IRoomRepository, RoomRepository>();
 			services.AddTransient<IAreaRepository, AreaRepository>();
+			services.AddTransient<IItemDefinitionRepository, ItemDefinitionRepository>();
+			services.AddTransient<IItemRepository, ItemRepository>();
+			services.AddTransient<ISessionUserService, SessionUserService>();
+			services.AddTransient<IUserMessageQueue, UserMessageQueue>();
+			services.AddTransient<ISessionService, SessionService>();
+			services.AddTransient<IRoomBroadcaster, RoomBroadcaster>();
 
 			var serviceProvider = services.BuildServiceProvider();
 

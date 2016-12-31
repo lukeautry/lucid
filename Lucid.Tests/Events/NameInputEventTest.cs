@@ -21,11 +21,13 @@ namespace Lucid.Tests.Events
 			var session = new SessionData(sessionId);
 
 			var redisProvider = new TestRedisRepository();
-			await new SessionService(redisProvider).Save(session);
+		    var sessionService = new SessionService(redisProvider);
+			await sessionService.Save(session);
+		    var userMessageQueue = new UserMessageQueue(redisProvider);
 
 			var userRepository = new Mock<IUserRepository>();
 
-			var evt = new NameInputEvent(redisProvider, userRepository.Object);
+			var evt = new NameInputEvent(redisProvider, userRepository.Object, sessionService, userMessageQueue);
 			await evt.Execute(new NameInputEventData(name, sessionId));
 
 			var userMessage = redisProvider.DequeueUserMessage(sessionId);
@@ -38,14 +40,15 @@ namespace Lucid.Tests.Events
 			var session = new SessionData("test-session");
 
 			var redisProvider = new TestRedisRepository();
-			await new SessionService(redisProvider).Save(session);
+		    var sessionService = new SessionService(redisProvider);
+			await sessionService.Save(session);
 
 			const string userName = "TestName";
 			
 			var userRepository = new Mock<IUserRepository>();
 		    userRepository.Setup(u => u.GetByName(userName)).ReturnsAsync(new User { Name = userName, Id = 1 });
 
-			var evt = new NameInputEvent(redisProvider, userRepository.Object);
+			var evt = new NameInputEvent(redisProvider, userRepository.Object, sessionService, new UserMessageQueue(redisProvider));
 			await evt.Execute(new NameInputEventData(userName, session.Id));
 
 			var updatedSession = await new SessionService(redisProvider).Get(session.Id);
@@ -62,14 +65,15 @@ namespace Lucid.Tests.Events
 			var session = new SessionData("test-session");
 
 			var redisProvider = new TestRedisRepository();
-			await new SessionService(redisProvider).Save(session);
+			var sessionService = new SessionService(redisProvider);
+			await sessionService.Save(session);
 
 			const string userName = "TestName";
 
 			var userRepository = new Mock<IUserRepository>();
 			userRepository.Setup(u => u.GetByName(userName)).ReturnsAsync(null);
 
-			var evt = new NameInputEvent(redisProvider, userRepository.Object);
+			var evt = new NameInputEvent(redisProvider, userRepository.Object, sessionService, new UserMessageQueue(redisProvider));
 			await evt.Execute(new NameInputEventData(userName, session.Id));
 
 			var updatedSession = await new SessionService(redisProvider).Get(session.Id);

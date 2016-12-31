@@ -10,7 +10,10 @@ namespace Lucid.Views
 		{
 			return builder
 				.Break()
-				.Add("Usage: help [topic or command], e.g. help look");
+				.Add("Usage: help [topic or command], e.g. help look")
+				.Break()
+				.Add("Get a list of common commands with 'commands'")
+				.Break();
 		}
 	}
 }

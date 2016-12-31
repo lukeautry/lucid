@@ -3,9 +3,20 @@ using Lucid.Core;
 
 namespace Lucid.Commands
 {
-	public class Quit : Command
+	public sealed class Quit : Command
 	{
-		public Quit(IRedisProvider redisProvider) : base(new[] { "qui", "quit" }, redisProvider) { }
+		private readonly IUserMessageQueue _userMessageQueue;
+		private readonly ISessionService _sessionService;
+
+		public Quit(
+			IRedisProvider redisProvider,
+			IUserMessageQueue userMessageQueue,
+			ISessionService sessionService
+			) : base(new[] { "qui", "quit" }, redisProvider)
+		{
+			_userMessageQueue = userMessageQueue;
+			_sessionService = sessionService;
+		}
 
 		public override CommandMetadata GetCommandMetadata()
 		{
@@ -14,8 +25,8 @@ namespace Lucid.Commands
 
 		public override async Task Process(string sessionId, string[] arguments)
 		{
-			await new UserMessageQueue(RedisProvider).Enqueue(sessionId, b => b.Add("Quitting..."));
-			await new SessionService(RedisProvider).Evict(sessionId);
+			await _userMessageQueue.Enqueue(sessionId, b => b.Add("Quitting..."));
+			await _sessionService.Evict(sessionId);
 		}
 	}
 }

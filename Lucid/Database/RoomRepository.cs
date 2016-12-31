@@ -43,7 +43,7 @@ namespace Lucid.Database
 		{
 			var updatedRoom = await Connection.QuerySingleAsync<Room>(
 				$"update {TableName} set name = @Name, description = @Description, updated_at = @UpdatedAt, north_room_id = @NorthRoomId, east_room_id = @EastRoomId, south_room_id = @SouthRoomId, west_room_id = @WestRoomId," +
-				$"up_room_id = @UpRoomId, down_room_id = @DownRoomId where id = @Id returning *", 
+				$"up_room_id = @UpRoomId, down_room_id = @DownRoomId where id = @Id returning *",
 				new { request.Name, request.Description, UpdatedAt = DateTime.UtcNow, request.NorthRoomId, request.EastRoomId, request.SouthRoomId, request.WestRoomId, request.UpRoomId, request.DownRoomId, request.Id });
 
 			await CacheSetById(updatedRoom);

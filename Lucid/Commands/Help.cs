@@ -3,7 +3,7 @@ using Lucid.Core;
 
 namespace Lucid.Commands
 {
-	public class Help : Command
+	public sealed class Help : Command
 	{
 		public Help(IRedisProvider redisProvider) : base(new[] { "h", "he", "hel", "help" }, redisProvider) { }
 

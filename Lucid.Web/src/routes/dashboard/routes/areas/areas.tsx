@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ApiAreasGet, IArea } from '../../../../api/api';
+import { ApiAreasGet, IArea } from 'api/api';
 import LinearProgress from 'material-ui/LinearProgress';
 import * as colors from 'material-ui/styles/colors';
 import { observable } from 'mobx';

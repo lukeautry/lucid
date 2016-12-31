@@ -10,7 +10,13 @@ namespace Lucid.Core
 		public string Content { get; set; }
 	}
 
-	public sealed class UserMessageQueue
+	public interface IUserMessageQueue
+	{
+		Task Start(string sessionId, ISocketService socketService);
+		Task Enqueue(string sessionId, Func<UserMessageBuilder, UserMessageBuilder> messageBuilderFunction);
+	}
+
+	public sealed class UserMessageQueue : IUserMessageQueue
 	{
 		private readonly IRedisProvider _redisProvider;
 

@@ -7,9 +7,10 @@ using Microsoft.Extensions.DependencyModel;
 
 namespace Lucid.Commands
 {
-	public class CommandMap
+	public static class CommandMap
 	{
 		private static IReadOnlyDictionary<string, Command> _commandMap;
+		private static readonly IList<CommandMetadata> _commandMetadataCollection = new List<CommandMetadata>();
 
 		public static void Initialize(IServiceProvider serviceProvider)
 		{
@@ -54,11 +55,19 @@ namespace Lucid.Commands
 		private static void RegisterCommand(Type type, IDictionary<string, Command> dictionary, IServiceProvider serviceProvider)
 		{
 			var command = ActivatorUtilities.CreateInstance(serviceProvider, type) as Command;
+			if (command == null) { return; }
+
+			_commandMetadataCollection.Add(command.GetCommandMetadata());
 
 			foreach (var key in command.Keys)
 			{
 				dictionary.Add(key, command);
 			}
+		}
+
+		public static IEnumerable<CommandMetadata> GetAll()
+		{
+			return _commandMetadataCollection;
 		}
 	}
 }

@@ -28,7 +28,11 @@ module.exports = {
   },
 
   resolve: {
-    extensions: ['.ts', '.js', '.tsx', '.css', '.scss']
+    extensions: ['.ts', '.js', '.tsx', '.css', '.scss'],
+    modules: [
+      path.resolve(srcPath),
+      'node_modules'
+    ]
   },
 
   plugins: [

@@ -10,6 +10,8 @@ namespace Lucid.Database
 		public DbSet<User> Users { get; set; }
 		public DbSet<Area> Areas { get; set; }
 		public DbSet<Room> Rooms { get; set; }
+		public DbSet<ItemDefinition> ItemDefinitions { get; set; }
+		public DbSet<Item> Items { get; set; }
 
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{

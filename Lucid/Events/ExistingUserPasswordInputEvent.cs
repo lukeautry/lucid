@@ -2,6 +2,7 @@
 using Lucid.Core;
 using Lucid.Database;
 using Lucid.Commands;
+using Lucid.Services;
 
 namespace Lucid.Events
 {
@@ -20,18 +21,22 @@ namespace Lucid.Events
     public class ExistingUserPasswordInputEvent : BlockingEvent<ExistingUserPasswordInputEventData>
     {
         private readonly IUserRepository _userRepository;
-        private readonly UserMessageQueue _userMessageQueue;
-        private readonly IRoomRepository _roomRepository;
+	    private readonly ISessionUserService _sessionUserService;
+	    private readonly IUserMessageQueue _userMessageQueue;
+	    private readonly ISessionService _sessionService;
 
-        public ExistingUserPasswordInputEvent(
+	    public ExistingUserPasswordInputEvent(
             IRedisProvider redisProvider,
             IUserRepository userRepository,
-            IRoomRepository roomRepository
+			ISessionUserService sessionUserService,
+			IUserMessageQueue userMessageQueue,
+			ISessionService sessionService
             ) : base("existing-user-password-input", redisProvider)
         {
             _userRepository = userRepository;
-            _roomRepository = roomRepository;
-            _userMessageQueue = new UserMessageQueue(RedisProvider);
+	        _sessionUserService = sessionUserService;
+	        _userMessageQueue = userMessageQueue;
+	        _sessionService = sessionService;
         }
 
         protected override async Task ExecuteBlockingEvent(ExistingUserPasswordInputEventData data)
@@ -42,23 +47,21 @@ namespace Lucid.Events
                 await _userMessageQueue.Enqueue(data.SessionId, b => b.Add("That password didn't match. Please try again."));
                 return;
             }
-
-            var sessionService = new SessionService(RedisProvider);
-
-            var existingUserSession = await sessionService.GetSessionByUserId(user.Id);
+			
+            var existingUserSession = await _sessionService.GetSessionByUserId(user.Id);
             if (existingUserSession != null)
             {
-                await sessionService.Evict(existingUserSession.Id);
+                await _sessionService.Evict(existingUserSession.Id);
 				await _userMessageQueue.Enqueue(data.SessionId, b => b.Add("Reconnecting..."));
             }
 
-            await new SessionService(RedisProvider).Update(data.SessionId, s =>
+            await _sessionService.Update(data.SessionId, s =>
             {
                 s.LoginData = null;
                 s.UserId = user.Id;
             });
 
-            await Look.ShowCurrentRoom(_userRepository, _roomRepository, RedisProvider, data.SessionId);
+            await Look.ShowCurrentRoom(RedisProvider, _sessionUserService, data.SessionId);
         }
     }
 }

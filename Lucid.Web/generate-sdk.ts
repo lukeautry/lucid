@@ -147,21 +147,25 @@ const getTypeFromRef = ($ref: string) => {
 };
 
 const getPropertyTypeFromSwaggerProperty = (property: Swagger.ISchema): string => {
-  if (property.type === 'integer') { return 'number'; }
-  if (property.type === 'boolean') { return 'boolean'; }
-  if (property.type === 'string') {
-    return property.format === 'date-time' ? 'Date' : 'string';
-  }
+  if (!property) { return 'void'; }
 
-  if (property.type === 'array') {
-    const items = property.items as Swagger.ISchema;
-    if (!items) { throw new Error(); }
-
-    if (items.type) {
-      return `${getPropertyTypeFromSwaggerProperty(items.type)}[]`;
+  if (property.type) {
+    if (property.type === 'integer') { return 'number'; }
+    if (property.type === 'boolean') { return 'boolean'; }
+    if (property.type === 'string') {
+      return property.format === 'date-time' ? 'Date' : 'string';
     }
 
-    return `${getTypeFromRef(items.$ref as string)}[]`;
+    if (property.type === 'array') {
+      const items = property.items as Swagger.ISchema;
+      if (!items) { throw new Error(); }
+
+      if (items.type) {
+        return `${getPropertyTypeFromSwaggerProperty(items.type)}[]`;
+      }
+
+      return `${getTypeFromRef(items.$ref as string)}[]`;
+    }
   }
 
   if (property.$ref) { return getTypeFromRef(property.$ref); }
@@ -171,12 +175,12 @@ const getPropertyTypeFromSwaggerProperty = (property: Swagger.ISchema): string =
 
 const getTypeScriptTypeFromSwaggerType = (schema: ISchema) => {
   if (schema.type === 'integer') { return 'number'; }
-    if (schema.type === 'boolean') { return 'boolean'; }
-    if (schema.type === 'string') {
-      return schema.format === 'date-time' ? 'Date' : 'string';
-    }
+  if (schema.type === 'boolean') { return 'boolean'; }
+  if (schema.type === 'string') {
+    return schema.format === 'date-time' ? 'Date' : 'string';
+  }
 
-    return undefined;
+  return undefined;
 };
 
 const getPropertyTypeFromSwaggerParameter = (parameter: Swagger.IBaseParameter): string => {

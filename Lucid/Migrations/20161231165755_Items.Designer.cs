@@ -8,9 +8,10 @@ using Lucid.Database;
 namespace Lucid.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20161231165755_Items")]
+    partial class Items
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.0.1");
@@ -39,34 +40,6 @@ namespace Lucid.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("areas");
-                });
-
-            modelBuilder.Entity("Lucid.Models.Item", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnName("created_at");
-
-                    b.Property<int>("ItemDefinitionId")
-                        .HasColumnName("item_definition_id");
-
-                    b.Property<int>("ParentObjectId")
-                        .HasColumnName("parent_object_id");
-
-                    b.Property<int>("ParentObjectType")
-                        .HasColumnName("parent_object_type");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ItemDefinitionId");
-
-                    b.ToTable("items");
                 });
 
             modelBuilder.Entity("Lucid.Models.ItemDefinition", b =>
@@ -184,14 +157,6 @@ namespace Lucid.Migrations
                     b.HasIndex("CurrentRoomId");
 
                     b.ToTable("users");
-                });
-
-            modelBuilder.Entity("Lucid.Models.Item", b =>
-                {
-                    b.HasOne("Lucid.Models.ItemDefinition", "ItemDefinition")
-                        .WithMany()
-                        .HasForeignKey("ItemDefinitionId")
-                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("Lucid.Models.Room", b =>

@@ -15,12 +15,16 @@ namespace Lucid.Events
 
 	public class CommandUnrecognizedEvent : Event<CommandUnrecognizedEventData>
 	{
-		public CommandUnrecognizedEvent(IRedisProvider redisProvider) : base("command-unrecognized", redisProvider) { }
+		private readonly IUserMessageQueue _userMessageQueue;
+
+		public CommandUnrecognizedEvent(IRedisProvider redisProvider, IUserMessageQueue userMessageQueue) : base("command-unrecognized", redisProvider)
+		{
+			_userMessageQueue = userMessageQueue;
+		}
 
 		public override async Task Execute(CommandUnrecognizedEventData data)
 		{
-			var userMessageQueue = new UserMessageQueue(RedisProvider);
-			await userMessageQueue.Enqueue(data.SessionId, b => b.Break().Add("Sorry, that command isn't recognized."));
+			await _userMessageQueue.Enqueue(data.SessionId, b => b.Break().Add("Sorry, that command isn't recognized."));
 		}
 	}
 }

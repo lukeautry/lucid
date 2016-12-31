@@ -15,30 +15,37 @@ namespace Lucid.Events
 
 	public class NewUserPasswordInputEvent : Event<NewUserPasswordInputEventData>
 	{
+		private readonly IUserMessageQueue _userMessageQueue;
+		private readonly ISessionService _sessionService;
 		public const string ConfirmPasswordText = "Please confirm your password:";
 
-		public NewUserPasswordInputEvent(IRedisProvider redisProvider) : base("new-user-password-input", redisProvider) { }
+		public NewUserPasswordInputEvent(
+			IRedisProvider redisProvider,
+			IUserMessageQueue userMessageQueue,
+			ISessionService sessionService
+			) : base("new-user-password-input", redisProvider)
+		{
+			_userMessageQueue = userMessageQueue;
+			_sessionService = sessionService;
+		}
 
 		public override async Task Execute(NewUserPasswordInputEventData data)
 		{
-			var userMessageQueue = new UserMessageQueue(RedisProvider);
-
 			var validationResponse = PasswordValidation.ValidatePassword(data.Password);
 			if (!validationResponse.IsValid)
 			{
-				await userMessageQueue.Enqueue(data.SessionId, b => b.Add(validationResponse.Message));
+				await _userMessageQueue.Enqueue(data.SessionId, b => b.Add(validationResponse.Message));
 				return;
 			}
-
-			var sessionService = new SessionService(RedisProvider);
-			await sessionService.Update(data.SessionId, s =>
+			
+			await _sessionService.Update(data.SessionId, s =>
 			{
 				s.CreationData.PasswordInputPending = false;
 				s.CreationData.ConfirmPasswordInputPending = true;
 				s.CreationData.Password = data.Password;
 			});
 
-			await userMessageQueue.Enqueue(data.SessionId, b => b.Add(ConfirmPasswordText));
+			await _userMessageQueue.Enqueue(data.SessionId, b => b.Add(ConfirmPasswordText));
 		}
 	}
 }

@@ -12,6 +12,7 @@ namespace Lucid.Database
 	{
 		Task<T> Get(int id);
 		Task<IEnumerable<T>> GetList(ListParams listParams = null);
+		Task Delete(int id);
 	}
 
 	public class ListParams
@@ -77,6 +78,11 @@ namespace Lucid.Database
 			}
 
 			return await Connection.QueryAsync<T>(sqlCommand, parameters);
+		}
+
+		public async Task Delete(int id)
+		{
+			await Connection.ExecuteAsync($"delete from {TableName} where Id = @Id", new { id });
 		}
 
 		public void Dispose()
