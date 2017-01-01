@@ -13,7 +13,13 @@ namespace Lucid.Models
 
 		public int? CurrentRoomId { get; set; }
 		public Room CurrentRoom { get; set; }
-    }
+
+		public int? PrimaryWeaponId { get; set; }
+		public Item PrimaryWeapon { get; set; }
+
+		public int? BodyItemId { get; set; }
+		public Item BodyItem { get; set; }
+	}
 
 	public class UserUpdateRequest
 	{

@@ -12,6 +12,7 @@ namespace Lucid.Database
 		public DbSet<Room> Rooms { get; set; }
 		public DbSet<ItemDefinition> ItemDefinitions { get; set; }
 		public DbSet<Item> Items { get; set; }
+		public DbSet<EquipmentSlot> EquipmentSlots { get; set; }
 
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
@@ -36,6 +37,9 @@ namespace Lucid.Database
 			modelBuilder.Entity<Room>().HasOne(p => p.WestRoom).WithMany().OnDelete(DeleteBehavior.SetNull);
 			modelBuilder.Entity<Room>().HasOne(p => p.UpRoom).WithMany().OnDelete(DeleteBehavior.SetNull);
 			modelBuilder.Entity<Room>().HasOne(p => p.DownRoom).WithMany().OnDelete(DeleteBehavior.SetNull);
+
+			modelBuilder.Entity<EquipmentSlot>()
+				.HasIndex(e => new {e.ItemDefinitionId, e.EquipmentType}).IsUnique();
 		}
 
 	    private static string ConvertPascalCaseToSnakeCase(string value)

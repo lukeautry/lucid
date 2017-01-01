@@ -13,9 +13,10 @@ namespace Lucid.Tests.Events
 		    var session = new SessionData("test-session");
 
 			var redisProvider = new TestRedisRepository();
-		    await new SessionService(redisProvider).Save(session);
+		    var sessionService = new SessionService(redisProvider);
+		    await sessionService.Save(session);
 
-		    var evt = new ConnectEvent(redisProvider);
+		    var evt = new ConnectEvent(redisProvider, new UserMessageQueue(redisProvider), sessionService);
 		    await evt.Execute(new ConnectEventData(session.Id));
 
 		    var welcomeMessage = redisProvider.DequeueUserMessage(session.Id);

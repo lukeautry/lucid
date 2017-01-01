@@ -1,27 +1,39 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 using Lucid.Core;
 using Lucid.Models;
 using Dapper;
+using System.Linq;
 
 namespace Lucid.Database
 {
 	public interface IItemRepository : IRepository<Item>
 	{
 		Task<Item> Create(ItemCreationRequest request);
+		Task<IEnumerable<Item>> GetInventoryItems(int userId);
 	}
 
 	public class ItemRepository : Repository<Item>, IItemRepository
 	{
 		private readonly IUserRepository _userRepository;
 		private readonly IRoomRepository _roomRepository;
+		private readonly IItemDefinitionRepository _itemDefinitionRepository;
+
 		public override string TableName { get; } = "items";
 
-		public ItemRepository(IRedisProvider redisProvider, IDbConnection connection, IUserRepository userRepository, IRoomRepository roomRepository) : base(redisProvider, connection)
+		public ItemRepository(
+			IRedisProvider redisProvider, 
+			IDbConnection connection, 
+			IUserRepository userRepository, 
+			IRoomRepository roomRepository,
+			IItemDefinitionRepository itemDefinitionRepository
+			) : base(redisProvider, connection)
 		{
 			_userRepository = userRepository;
 			_roomRepository = roomRepository;
+			_itemDefinitionRepository = itemDefinitionRepository;
 		}
 
 		public async Task<Item> Create(ItemCreationRequest request)
@@ -36,6 +48,27 @@ namespace Lucid.Database
 
 			await CacheSetById(createdItem);
 			return createdItem;
+		}
+
+		public async Task<IEnumerable<Item>> GetInventoryItems(int userId)
+		{
+			// TODO: Cache this somehow
+			var items = await GetList(new ListParams("where parent_object_type = @ParentObjectType and parent_object_id = @ParentObjectId", new
+			{
+				ParentObjectType = ObjectType.User,
+				ParentObjectId = userId
+			}));
+
+			var itemsArray = items.ToArray();
+			var itemDefinitions = await _itemDefinitionRepository.GetByIds(itemsArray.Select(i => i.ItemDefinitionId).Distinct());
+			var itemMap = itemDefinitions.ToDictionary(item => item.Id, item => item);
+
+			foreach (var item in itemsArray)
+			{
+				item.ItemDefinition = itemMap[item.ItemDefinitionId];
+			}
+
+			return itemsArray;
 		}
 
 		private async Task ValidateObjectType(ObjectType parentObjectType, int parentObjectId)

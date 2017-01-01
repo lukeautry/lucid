@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 using Lucid.Core;
 using Lucid.Models;
 using Dapper;
+using System.Linq;
 
 namespace Lucid.Database
 {
@@ -11,6 +13,7 @@ namespace Lucid.Database
 	{
 		Task<ItemDefinition> Create(ItemDefinitionCreationRequest itemDefinition);
 		Task<ItemDefinition> Update(ItemDefinitionUpdateRequest itemDefinition);
+		Task<IEnumerable<ItemDefinition>> GetByIds(IEnumerable<int> distinct);
 	}
 
 	public class ItemDefinitionRepository : Repository<ItemDefinition>, IItemDefinitionRepository
@@ -39,6 +42,40 @@ namespace Lucid.Database
 
 			await CacheSetById(updatedItemDefinition);
 			return updatedItemDefinition;
+		}
+
+		public async Task<IEnumerable<ItemDefinition>> GetByIds(IEnumerable<int> ids)
+		{
+			var cachedItemDefinitions = new List<ItemDefinition>();
+
+			var queryIds = new List<int>();
+			foreach (var id in ids)
+			{
+				var itemDefinition = await CacheGetById(id);
+				if (itemDefinition != null)
+				{
+					cachedItemDefinitions.Add(itemDefinition);
+					continue;
+				}
+
+				queryIds.Add(id);
+			}
+
+
+			if (!queryIds.Any()) { return cachedItemDefinitions; }
+
+			var fetchedItemDefinitions = await GetList(new ListParams("where id in @Ids", new
+			{
+				Ids = queryIds.ToArray()
+			}));
+
+			foreach (var fetchedItemDefinition in fetchedItemDefinitions)
+			{
+				await CacheSetById(fetchedItemDefinition);
+				cachedItemDefinitions.Add(fetchedItemDefinition);
+			}
+
+			return cachedItemDefinitions;
 		}
 	}
 }

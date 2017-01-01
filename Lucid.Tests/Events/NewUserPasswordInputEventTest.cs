@@ -18,7 +18,7 @@ namespace Lucid.Tests.Events
 	    [Fact]
 	    public async Task ShouldRejectInvalidPassword()
 	    {
-		    var evt = new NewUserPasswordInputEvent(_context.RedisProvider);
+		    var evt = new NewUserPasswordInputEvent(_context.RedisProvider, new UserMessageQueue(_context.RedisProvider), new SessionService(_context.RedisProvider));
 		    await evt.Execute(new NewUserPasswordInputEventData(Context.SessionId, string.Empty));
 
 			var validationMessage = _context.RedisProvider.DequeueUserMessage(Context.SessionId);
@@ -39,7 +39,7 @@ namespace Lucid.Tests.Events
 				};
 			});
 
-			var evt = new NewUserPasswordInputEvent(_context.RedisProvider);
+			var evt = new NewUserPasswordInputEvent(_context.RedisProvider, new UserMessageQueue(_context.RedisProvider), new SessionService(_context.RedisProvider));
 			await evt.Execute(new NewUserPasswordInputEventData(Context.SessionId, password));
 
 			var confirmPasswordMessage = _context.RedisProvider.DequeueUserMessage(Context.SessionId);

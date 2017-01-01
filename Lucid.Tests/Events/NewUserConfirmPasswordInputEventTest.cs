@@ -3,6 +3,7 @@ using Xunit;
 using Lucid.Core;
 using Lucid.Database;
 using Lucid.Events;
+using Lucid.Services;
 using Moq;
 using Context = Lucid.Tests.Fixtures.Context;
 
@@ -26,7 +27,11 @@ namespace Lucid.Tests.Events
 
 			var userRepository = new Mock<IUserRepository>();
 			var roomRepository = new Mock<IRoomRepository>();
-			var evt = new NewUserConfirmPasswordInputEvent(_context.RedisProvider, userRepository.Object, roomRepository.Object);
+
+			// TODO: Disgusting
+			var evt = new NewUserConfirmPasswordInputEvent(_context.RedisProvider, userRepository.Object, 
+				new SessionUserService(userRepository.Object, roomRepository.Object, _context.RedisProvider), 
+				new UserMessageQueue(_context.RedisProvider), new SessionService(_context.RedisProvider));
 		    await evt.Execute(new NewUserConfirmPasswordInputEventData(session.Id, "non-matching-test1234"));
 
 		    var nextMessage = _context.GetNextMessage();

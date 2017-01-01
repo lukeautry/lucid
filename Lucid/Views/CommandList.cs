@@ -18,7 +18,7 @@ namespace Lucid.Views
 		    builder
 				.Break()
 				.Add("Commands")
-				.Add("-------------------------");
+				.Add(Constants.VisualSeparator);
 
 		    foreach (var command in _commandMetadatas.OrderBy(c => c.Name))
 		    {

@@ -19,7 +19,10 @@ namespace Lucid.Commands
 
 		public override async Task Process(string sessionId, string[] arguments)
 		{
-			var user = _sessionUserService.GetCurrentUser(sessionId);
+			var user = await _sessionUserService.GetCurrentUser(sessionId);
+			var items = await _itemRepository.GetInventoryItems(user.Id);
+
+			await new Views.Inventory(RedisProvider, items).Render(sessionId);
 		}
 
 		public override CommandMetadata GetCommandMetadata()

@@ -1,7 +1,5 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Lucid.Core;
-using Lucid.Database;
 using Lucid.Services;
 using Lucid.Views;
 using System.Linq;

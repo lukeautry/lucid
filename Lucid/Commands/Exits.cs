@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using Lucid.Core;
-using Lucid.Database;
 using Lucid.Services;
 
 namespace Lucid.Commands

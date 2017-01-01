@@ -58,13 +58,22 @@ namespace Lucid.Database
 			var cached = await CacheGetById(id);
 			if (cached != null) { return cached; }
 
-			var model = await Connection.QueryFirstOrDefaultAsync<T>($"select * from {TableName} where Id = @Id", new { id });
-			if (model != null)
+			try
 			{
-				await CacheSetById(model);
-			}
+				var model = await Connection.QueryFirstOrDefaultAsync<T>($"select * from {TableName} where Id = @Id", new { id });
+				if (model != null)
+				{
+					await CacheSetById(model);
+				}
 
-			return model;
+				return model;
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Exception during Get; Table {TableName}; Id {id}");
+				Console.WriteLine(ex.Message);
+				throw;
+			}
 		}
 
 		public async Task<IEnumerable<T>> GetList(ListParams listParams = null)
@@ -77,12 +86,30 @@ namespace Lucid.Database
 				parameters = listParams.Values;
 			}
 
-			return await Connection.QueryAsync<T>(sqlCommand, parameters);
+			try
+			{
+				return await Connection.QueryAsync<T>(sqlCommand, parameters);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Exception during GetList; Table {TableName}");
+				Console.WriteLine(ex.Message);
+				throw;
+			}
 		}
 
 		public async Task Delete(int id)
 		{
-			await Connection.ExecuteAsync($"delete from {TableName} where Id = @Id", new { id });
+			try
+			{
+				await Connection.ExecuteAsync($"delete from {TableName} where Id = @Id", new { id });
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Exception during Delete; Table {TableName}; Id {id}");
+				Console.WriteLine(ex.Message);
+				throw;
+			}
 		}
 
 		public void Dispose()

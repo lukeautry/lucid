@@ -16,7 +16,7 @@ namespace Lucid.Views
 			builder
 					.Break()
 					.Add("Players online:")
-					.Add("------------------------------");
+					.Add(Constants.VisualSeparator);
 
 			foreach (var user in _users)
 			{
